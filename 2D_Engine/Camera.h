@@ -2,6 +2,8 @@
 
 #include <glm/glm.hpp>
 
+class Renderer;
+
 // A camera.
 class Camera 
 {
@@ -15,7 +17,20 @@ class Camera
         // Update camera attributes.
         // speed Speed of movement.
         // dt Delta time.
-        void Update(float speed, float dt);
+        // render Parse renderer to get info about windwow.
+        void Update(float speed, float dt, Renderer* render);
+
+        // Rotate camera around up direction.
+        // rotation Amount of rotation in degrees.
+        void Yaw(float rotation);
+
+        // Rotate camera around right direction.
+        // rotation Amount of rotation in degrees.
+        void Pitch(float rotation);
+
+        // Rotate camera around front direction.
+        // rotation Amount of rotation in degrees.
+        void Roll(float rotation);
 
         // Position.
         glm::vec3 mPosition = glm::vec3(0.f, 0.f, 0.f);
@@ -29,9 +44,6 @@ class Camera
         // Right.
         glm::vec3 mRightDirection = glm::vec3(1.f, 0.f, 0.f);
 
-        // Rotation in degrees.
-        glm::vec3 mRotation = glm::vec3(0.f, 0.f, 0.f);
-
         // Scale.
         glm::vec3 mScale = glm::vec3(1.f, 1.f, 1.f);
 
@@ -40,6 +52,15 @@ class Camera
 
         // View matrix.
         glm::mat4 mViewMatrix;
+
+        // Old mouse left button pressed status.
+        bool mOldMouseLeftButtonPressed = false;
+
+        // Old mouse position.
+        glm::vec2 mOldMousePosition = glm::vec2(0.f, 0.f);
+
+        // New mouse position.
+        glm::vec2 mNewMousePosition = glm::vec2(0.f, 0.f);
 
     private:
         glm::mat4 CalculateOrientationMatrix() const;

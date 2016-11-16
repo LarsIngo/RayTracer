@@ -188,7 +188,7 @@ void CS_main(uint3 threadID : SV_DispatchThreadID)
                 float3 normal;
                 float3 diffuse;
                 if (hitData.sphere)
-                {  // Sphere.
+                {   // Sphere.
                     Sphere sphere = g_SphereBuffer[hitData.sphereID];
                     position = hitPoint;
                     normal = normalize(hitPoint - sphere.pos);
@@ -216,7 +216,7 @@ void CS_main(uint3 threadID : SV_DispatchThreadID)
     }
 
     // Set pixel color.
-    g_Target[threadID.xy] = float4(finalColor/(ssaa * ssaa), 1.f);
+    g_Target[threadID.xy] = float4(finalColor / (ssaa * ssaa), 1.f);
 }
 
 HitData RayVsScene(float3 rayOrigin, float3 rayDirection) 

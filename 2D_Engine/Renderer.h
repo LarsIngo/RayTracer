@@ -5,6 +5,7 @@
 
 #include <d3d11.h>
 #include <d3dcompiler.inl>
+#include <glm/vec2.hpp>
 #include <map>
 #include <string>
 #include <Windows.h>
@@ -33,6 +34,23 @@ class Renderer
         // path Path to file.
         Texture* CreateTexture(std::wstring path);
 
+        // Get key status.
+        // vKey Windows virtual key.
+        // Returns whether key is pressed or not.
+        bool GetKeyPressed(int vKey);
+
+        // Get mouse inside window.
+        // Return whether mouse is inside window or not.
+        bool GetMouseInsideWindow();
+
+        // Get mouse postion in screen space.
+        // Return mouse position relative window upper left coner.
+        glm::vec2 GetMousePosition();
+
+        // Get mouse left button status.
+        // Return whether mouse left button is pressed or not.
+        bool GetMouseLeftButtonPressed();
+
         // mWidth Window width in pixels.
         unsigned int mWidth;
 
@@ -60,4 +78,7 @@ class Renderer
 
         // Texture map.
         std::map<std::wstring, Texture*> mTextureMap;
+
+        // Mouse position.
+        glm::vec2 mMousePosition;
 };

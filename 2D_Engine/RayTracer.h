@@ -90,21 +90,6 @@ class RayTracer
         // Structured buffer contaning metadata.
         ID3D11ShaderResourceView* mMetaBuffer;
 
-        //// Diffuse texture array buffer.
-        //ID3D11ShaderResourceView* mDiffuseTexArray64x64Buffer;
-
-        //// Normal textures.
-        //std::vector<ID3D11ShaderResourceView*> mNormalSRVs;
-
-        //// Normal texture buffer.
-        //ID3D11ShaderResourceView* mNormalTexBuffer;
-
-        //// Metal texture.
-        //std::vector<ID3D11ShaderResourceView*> mMetalSRVs;
-
-        //// Metal texture buffer.
-        //ID3D11ShaderResourceView* mMetalTexBuffer;
-
         // Vector of shader resource views.
         std::vector<ID3D11ShaderResourceView*> mSRVs;
 

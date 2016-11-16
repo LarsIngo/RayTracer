@@ -4,7 +4,6 @@
 #include <stdlib.h>
 #include <crtdbg.h>
 #include <iostream>
-#include <Windows.h>
 
 #include <glm/glm.hpp>
 #include "Entity.h"
@@ -98,7 +97,7 @@ int main()
             
         // Update.
         // Camera.
-        cam->Update(0.1f, 1.f);
+        cam->Update(0.1f, 1.f, renderer);
         // Point lights.
         for (PointLight* pointLight : pointLights) {
             pointLight->pos += glm::vec3(arrowinput.x, 0.f, arrowinput.y);

@@ -50,6 +50,44 @@ Texture* Renderer::CreateTexture(std::wstring path)
     return texture;
 }
 
+bool Renderer::GetKeyPressed(int vKey)
+{
+    return GetAsyncKeyState(vKey);
+}
+
+glm::vec2 Renderer::GetMousePosition()
+{
+    return mMousePosition;
+}
+
+bool Renderer::GetMouseInsideWindow()
+{
+    // get current mouse position in screen coords
+    POINT pos = { 0, 0 };
+    if (GetCursorPos(&pos))
+    {
+        // convert position to client window coords
+        if (ScreenToClient(mHWND, &pos))
+        {
+            // get window's client rect
+            RECT rcClient = { 0 };
+            GetClientRect(mHWND, &rcClient);
+
+            // if mouse cursor is inside rect
+            if (PtInRect(&rcClient, pos)) {
+                mMousePosition = glm::vec2(static_cast<float>(pos.x) / mWidth * 2.f - 1.f, -(static_cast<float>(pos.y) / mHeight * 2.f - 1.f));
+                return true;
+            }
+        }
+    }
+    return false;
+}
+
+bool Renderer::GetMouseLeftButtonPressed()
+{
+    return (GetKeyState(VK_LBUTTON) & 0x80) != 0;
+}
+
 void Renderer::Initialise() 
 {
     // Register the window class to create.
