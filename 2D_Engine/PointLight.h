@@ -9,9 +9,7 @@ struct PointLight
     glm::vec3 pos;
     // Color.
     glm::vec3 col;
-    // Max distance.
-    float maxDistance;
-    float pad;
+    float pad[2];
 
     // Constructor.
     PointLight();
@@ -19,7 +17,7 @@ struct PointLight
     // Constructor.
     // pos Position.
     // col Color.
-    PointLight(const glm::vec3& pos, const glm::vec3& col, float maxDistance);
+    PointLight(const glm::vec3& pos, const glm::vec3& col);
 };
 
 inline PointLight::PointLight() 
@@ -27,9 +25,8 @@ inline PointLight::PointLight()
 
 }
 
-inline PointLight::PointLight(const glm::vec3& pos, const glm::vec3& col, float maxDistance)
+inline PointLight::PointLight(const glm::vec3& pos, const glm::vec3& col)
 {
     this->pos = pos;
     this->col = col;
-    this->maxDistance = maxDistance;
 }

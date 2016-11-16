@@ -1,5 +1,6 @@
 #include "Scene.h"
 
+#include "DirectionalLight.h"
 #include "Entity.h"
 #include "Model.h"
 #include "Sphere.h"
@@ -16,6 +17,8 @@ Scene::~Scene()
         delete e;
     for (PointLight* p : mPointLights)
         delete p;
+    for (DirectionalLight* d : mDirectionalLights)
+        delete d;
     for (Sphere* s : mSpheres)
         delete s;
 }
@@ -33,6 +36,14 @@ PointLight* Scene::CreatePointLight()
     mPointLights.push_back(p);
     return p;
 }
+
+DirectionalLight* Scene::CreateDirectionalLight()
+{
+    DirectionalLight* d = new DirectionalLight;
+    mDirectionalLights.push_back(d);
+    return d;
+}
+
 
 Sphere* Scene::CreateSphere()
 {
@@ -54,6 +65,11 @@ std::vector<Entity*>* Scene::GetEntities()
 std::vector<PointLight*>* Scene::GetPointLights()
 {
     return &mPointLights;
+}
+
+std::vector<DirectionalLight*>* Scene::GetDirectionalLights()
+{
+    return &mDirectionalLights;
 }
 
 std::vector<Sphere*>* Scene::GetSpheres()

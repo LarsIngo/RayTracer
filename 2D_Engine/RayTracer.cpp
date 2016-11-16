@@ -5,6 +5,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <vector>
 
+#include "DirectionalLight.h"
 #include "Entity.h"
 #include "EntityEntry.h"
 #include "Renderer.h"
@@ -25,6 +26,7 @@ RayTracer::RayTracer(unsigned int width, unsigned int height, Scene* scene)
     mShader->CreateConstantBuffer<ConstData>(&ConstData(width, height), &mConstBuffer);
     mShader->CreateCPUwriteGPUreadStructuredBuffer<Vertex>(mMaxNumVertices, &mVertexBuffer);
     mShader->CreateCPUwriteGPUreadStructuredBuffer<PointLight>(mMaxNumPointLights, &mPointLightBuffer);
+    mShader->CreateCPUwriteGPUreadStructuredBuffer<PointLight>(mMaxNumDirectionalLights, &mDirectionalLightBuffer);
     mShader->CreateCPUwriteGPUreadStructuredBuffer<Sphere>(mMaxNumSpheres, &mSphereBuffer);
     mShader->CreateCPUwriteGPUreadStructuredBuffer<EntityEntry>(mMaxNumOfEntities, &mEntityEntryBuffer);
     mShader->CreateCPUwriteGPUreadStructuredBuffer<MetaData>(1, &mMetaBuffer);
@@ -49,6 +51,7 @@ RayTracer::RayTracer(unsigned int width, unsigned int height, Scene* scene)
     // Bind.
     mSRVs.push_back(mVertexBuffer);
     mSRVs.push_back(mPointLightBuffer);
+    mSRVs.push_back(mDirectionalLightBuffer);
     mSRVs.push_back(mSphereBuffer);
     mSRVs.push_back(mEntityEntryBuffer);
     mSRVs.push_back(mMetaBuffer);
@@ -65,6 +68,7 @@ RayTracer::~RayTracer()
     mShader->UnbindCS(1, mSRVs.size());
     mVertexBuffer->Release();
     mPointLightBuffer->Release();
+    mDirectionalLightBuffer->Release();
     mSphereBuffer->Release();
     mEntityEntryBuffer->Release();
     mMetaBuffer->Release();
@@ -114,6 +118,14 @@ void RayTracer::Update(Scene& scene)
         pointLight.pos = glm::vec3(viewMatrix * glm::vec4(pointLight.pos, 1.f));
     }
 
+    // Transform directional lights to view space.
+    mDirectionalLights.resize(scene.mDirectionalLights.size());
+    for (std::size_t i = 0; i < scene.mDirectionalLights.size(); ++i)
+    {
+        DirectionalLight& directionalLight = mDirectionalLights[i] = *scene.mDirectionalLights[i];
+        directionalLight.dir = glm::normalize(glm::vec3(viewMatrix * glm::vec4(directionalLight.dir, 0.f)));
+    }
+
     // Transform spheres to view space.
     mSpheres.resize(scene.mSpheres.size());
     for (std::size_t i = 0; i < scene.mSpheres.size(); ++i)
@@ -128,13 +140,15 @@ void RayTracer::Render(Scene& scene)
     // Update buffers.
     assert(mVertices.size() <= mMaxNumVertices);
     assert(mPointLights.size() <= mMaxNumPointLights);
+    assert(mDirectionalLights.size() <= mMaxNumDirectionalLights);
     assert(mSpheres.size() <= mMaxNumSpheres);
     assert(scene.mEntites.size() <= mMaxNumOfEntities);
     mShader->WriteStructuredBuffer<Vertex>(mVertices.data(), mVertices.size(), mVertexBuffer);
     mShader->WriteStructuredBuffer<PointLight>(mPointLights.data(), mPointLights.size(), mPointLightBuffer);
+    mShader->WriteStructuredBuffer<DirectionalLight>(mDirectionalLights.data(), mDirectionalLights.size(), mDirectionalLightBuffer);
     mShader->WriteStructuredBuffer<Sphere>(mSpheres.data(), mSpheres.size(), mSphereBuffer);
     mShader->WriteStructuredBuffer<EntityEntry>(mEntityEntries.data(), mEntityEntries.size(), mEntityEntryBuffer);
-    mShader->WriteStructuredBuffer<MetaData>(&MetaData(mVertices.size(), mPointLights.size(), mSpheres.size(), mNumBounces, scene.mEntites.size(), mSSAA), 1, mMetaBuffer);
+    mShader->WriteStructuredBuffer<MetaData>(&MetaData(mVertices.size(), mPointLights.size(), mDirectionalLights.size(), mSpheres.size(), mNumBounces, scene.mEntites.size(), mSSAA), 1, mMetaBuffer);
 
     // Run compute shader.
     mShader->ExecuteCS(glm::vec3(mRenderer->mWidth / 32, mRenderer->mHeight / 32, 1));
@@ -143,10 +157,11 @@ void RayTracer::Render(Scene& scene)
     mRenderer->mSwapChain->Present(0,0);
 }
 
-RayTracer::MetaData::MetaData(int numVertices, int numPointLights, int numSpheres, int numBounces, int numEntities, int ssaa)
+RayTracer::MetaData::MetaData(int numVertices, int numPointLights, int numDirectionalLights, int numSpheres, int numBounces, int numEntities, int ssaa)
 {
     this->numVertices = numVertices;
     this->numPointLights = numPointLights;
+    this->numDirectionalLights = numDirectionalLights;
     this->numSpheres = numSpheres;
     this->numBounces = numBounces;
     this->numEntities = numEntities;

@@ -1,5 +1,6 @@
 #pragma once
 
+#include "DirectionalLight.h"
 #include "EntityEntry.h"
 #include "Sphere.h"
 #include "PointLight.h"
@@ -44,6 +45,9 @@ class RayTracer
         // Max number of point lights.
         const int mMaxNumPointLights = 10;
 
+        // Max number of directional lights.
+        const int mMaxNumDirectionalLights = 10;
+
         // Max number of spheres.
         const int mMaxNumSpheres = 10;
 
@@ -51,10 +55,10 @@ class RayTracer
         int mNumBounces = 1;
 
         // Max number of entities.
-        const int mMaxNumOfEntities = 10;
+        static const int mMaxNumOfEntities = 10;
 
         // Super sampling anti analyzing. Should be multiples of two.
-        const int mSSAA = 1;
+        int mSSAA = 1;
 
         // Renderer to render window.
         Renderer* mRenderer = nullptr;
@@ -74,6 +78,12 @@ class RayTracer
 
         // Structured buffer contaning point light data.
         ID3D11ShaderResourceView* mPointLightBuffer;
+
+        // Vector of directional lights.
+        std::vector<DirectionalLight> mDirectionalLights;
+
+        // Structured buffer contaning directional light data.
+        ID3D11ShaderResourceView* mDirectionalLightBuffer;
 
         // Vector of spheres.
         std::vector<Sphere> mSpheres;
@@ -102,6 +112,8 @@ class RayTracer
             int numVertices;
             // Number of point lights.
             int numPointLights;
+            // Number of directinal lights.
+            int numDirectionalLights;
             // Number of spheres.
             int numSpheres;
             // Number of bounces.
@@ -110,10 +122,10 @@ class RayTracer
             int numEntities;
             // Amount of super sampling anti analyzing.
             int ssaa;
-            float pad[2];
+            float pad;
 
             // Constructor.
-            MetaData(int numVertices, int numPointLights, int numSpheres, int numBounces, int numEntities, int ssaa);
+            MetaData(int numVertices, int numPointLights, int numDirectionalLights, int numSpheres, int numBounces, int numEntities, int ssaa);
         };
 
         struct ConstData {

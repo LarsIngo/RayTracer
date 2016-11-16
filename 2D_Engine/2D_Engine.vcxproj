@@ -179,6 +179,7 @@
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="Animation.h" />
+    <ClInclude Include="DirectionalLight.h" />
     <ClInclude Include="DxAssert.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Entity.h" />

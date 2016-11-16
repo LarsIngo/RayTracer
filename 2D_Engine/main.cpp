@@ -4,8 +4,8 @@
 #include <stdlib.h>
 #include <crtdbg.h>
 #include <iostream>
-
 #include <glm/glm.hpp>
+#include "DirectionalLight.h"
 #include "Entity.h"
 #include "PointLight.h"
 #include "RayTracer.h"
@@ -41,27 +41,35 @@ int main()
         pointLight = scene.CreatePointLight();
         pointLight->pos = glm::vec3(0.f, 0.f, -2.f);
         pointLight->col = glm::vec3(1.f, 1.f, 1.f);
-        pointLight->maxDistance = 300.f;
         pointLights.push_back(pointLight);
 
         //pointLight = scene.CreatePointLight();
         //pointLight->pos = glm::vec3(5.f, 0.f, -2.f);
         //pointLight->col = glm::vec3(1.f, 1.f, 1.f);
-        //pointLight->maxDistance = 300.f;
         //pointLights.push_back(pointLight);
 
         //pointLight = scene.CreatePointLight();
         //pointLight->pos = glm::vec3(-5.f, 0.f, -2.f);
         //pointLight->col = glm::vec3(1.f, 1.f, 1.f);
-        //pointLight->maxDistance = 300.f;
         //pointLights.push_back(pointLight);
     }
 
+    // Directional lights.
+    {
+        DirectionalLight* directionalLight;
+        directionalLight = scene.CreateDirectionalLight();
+        directionalLight->dir = glm::normalize(glm::vec3(1.f, -1.f, 1.f));
+        directionalLight->col = glm::vec3(1.f, 1.f, 1.f);
+    }
+
     // Spheres.
-    Sphere* sphere = scene.CreateSphere();
-    sphere->pos = glm::vec3(0.f, 0.f, 0.f);
-    sphere->col = glm::vec3(0.f, 0.f, 1.f);
-    sphere->radius = 1.f;
+    {
+        Sphere* sphere = scene.CreateSphere();
+        sphere->pos = glm::vec3(0.f, 0.f, 0.f);
+        sphere->col = glm::vec3(0.f, 0.f, 1.f);
+        sphere->radius = 1.f;
+    }
+
 
     // Entities.
     Entity* model0 = scene.CreateEntity();

@@ -1,4 +1,3 @@
-
 #define FLT_MAX 3.402823466e+38F;
 
 // Sample state.
@@ -36,12 +35,22 @@ struct PointLight
     float3 pos;
     // Color.
     float3 col;
-    // Max distance.
-    float maxDistance;
-    float pad;
+    float2 pad;
 };
 // Point light buffer.
 StructuredBuffer<PointLight> g_PointLightBuffer : register(t1);
+
+// Directional light.
+struct DirectionalLight
+{
+    // Direction.
+    float3 dir;
+    // Color.
+    float3 col;
+    float2 pad;
+};
+// Directional light buffer.
+StructuredBuffer<DirectionalLight> g_DirectionalLightBuffer : register(t2);
 
 // Sphere.
 struct Sphere
@@ -55,7 +64,7 @@ struct Sphere
     float pad;
 };
 // Sphere buffer.
-StructuredBuffer<Sphere> g_SphereBuffer : register(t2);
+StructuredBuffer<Sphere> g_SphereBuffer : register(t3);
 
 // Entity entries.
 struct EntityEntry
@@ -67,7 +76,7 @@ struct EntityEntry
     float2 pad;
 };
 // Vertex buffer.
-StructuredBuffer<EntityEntry> g_EntityEntries : register(t3);
+StructuredBuffer<EntityEntry> g_EntityEntries : register(t4);
 
 // Meta data.
 struct MetaData 
@@ -76,6 +85,8 @@ struct MetaData
     int numVertices;
     // Number of lights in point light buffer.
     int numPointLights;
+    // Number of lights in directional light buffer;
+    int numDirectionalLights;
     // Number of spheres in sphere buffer;
     int numSpheres;
     // Number of bounces.
@@ -84,13 +95,13 @@ struct MetaData
     int numEntities;
     // Amount of super sampling anti analyzing.
     int ssaa;
-    float2 pad;
+    float pad;
 };
 // Meta buffer.
-StructuredBuffer<MetaData> g_MetaBuffer : register(t4);
+StructuredBuffer<MetaData> g_MetaBuffer : register(t5);
 
 // Diffuse texture array.
-Texture2DArray<float4> g_DiffuseTextureArray : register(t5);
+Texture2DArray<float4> g_DiffuseTextureArray : register(t6);
 
 // Hit data.
 struct HitData 
@@ -218,12 +229,12 @@ void CS_main(uint3 threadID : SV_DispatchThreadID)
     // Blend SSAA.
     finalColor = finalColor / (ssaa * ssaa);
 
+    // Gamma correction.
+    //const float gamma = 2.2f;
+    //finalColor = pow(finalColor, 1.f / gamma);
+
     // Tone map.
     finalColor = finalColor / (finalColor + float3(1.f, 1.f, 1.f));
-
-    // Gamma correction.
-    const float gamma = 2.2f;
-    finalColor = pow(finalColor, 1.f / gamma);
 
     // Set pixel color.
     g_Target[threadID.xy] = float4(finalColor, 1.f);
@@ -357,19 +368,16 @@ Vertex Interpolate(float3 hitPoint, Vertex v0, Vertex v1, Vertex v2)
 float3 CalculateColor(float3 rayDirection, float3 hitPoint, float3 position, float3 normal, float3 diffuse)
 {
     float3 color = float3(0.f, 0.f, 0.f);
-    //sample.reflectionFactor = 0.f;
-    int numOfPointLights = g_MetaBuffer[0].numPointLights;
-    for (int i = 0; i < numOfPointLights; ++i)
+
+    // Point lights.
+    int numPointLights = g_MetaBuffer[0].numPointLights;
+    for (int i = 0; i < numPointLights; ++i)
     {
         // Point light data.
         PointLight pointLight = g_PointLightBuffer[i];
         float3 lightVec = pointLight.pos - position;
         float distance = length(lightVec);
-        lightVec = normalize(pointLight.pos - position);
-        float3 camVec = normalize(-position);
-        float3 lightRefVec = normalize(reflect(-lightVec, normal));
-        float specularFactor = max(dot(camVec, lightRefVec), 0.0f);
-        specularFactor = pow(specularFactor, 5.f);
+        lightVec = normalize(lightVec);
 
         // Shadow ray.
         HitData hitData = RayVsScene(hitPoint + lightVec * 0.01f, lightVec);
@@ -379,15 +387,36 @@ float3 CalculateColor(float3 rayDirection, float3 hitPoint, float3 position, flo
             // Calculate diffuse.
             const float intensity = 15.f;
             float distanceFactor = clamp(intensity / (distance * distance), 0.f, 1.f);
-            float diffuseFactor = dot(lightVec, normal);
+            float diffuseFactor = max(dot(lightVec, normal), 0.f);
 
             // Calculate specular.
-            float3 specular = pointLight.col * specularFactor;
-            const float specularIntensity = 1.f - diffuseFactor;
+            float3 reflectVec = reflect(-lightVec, normal);
+            float3 specularVec = dot(-rayDirection, reflectVec); // TODO rayDirection or eyeDirection(-normalize(position))
+            float specular = pow(max(specularVec, 0.0f), 5.f) * 0.2f;
 
             // Combine color.
-            color += (diffuse * diffuseFactor + specularIntensity * specular) * distanceFactor;
+            color += distanceFactor * (pointLight.col * specular + diffuse * diffuseFactor);
         }
+    }
+
+    // Directional lights.
+    int numDirectionalLights = g_MetaBuffer[0].numDirectionalLights;
+    for (int i = 0; i < numDirectionalLights; ++i)
+    {
+        // Directional light data.
+        DirectionalLight directionalLight = g_DirectionalLightBuffer[i];
+        float3 lightVec = -directionalLight.dir;
+
+        // Calculate diffuse.
+        float diffuseFactor = max(dot(lightVec, normal), 0.f);
+
+        // Calculate specular.
+        float3 reflectVec = reflect(-lightVec, normal);
+        float3 specularVec = dot(-rayDirection, reflectVec); // TODO rayDirection or eyeDirection(-normalize(position))
+        float specular = pow(max(specularVec, 0.0f), 5.f) * 0.2f;
+
+        // Combine color.
+        color += directionalLight.col * specular + diffuse * diffuseFactor;
     }
 
     return color;

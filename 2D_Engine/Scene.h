@@ -5,6 +5,7 @@
 #include <string>
 #include <vector>
 
+struct DirectionalLight;
 class Entity;
 struct Sphere;
 struct PointLight;
@@ -29,6 +30,10 @@ class Scene
         // Returns pointer to point light.
         PointLight* CreatePointLight();
 
+        // Create directional light.
+        // Returns pointer to directional light.
+        DirectionalLight* CreateDirectionalLight();
+
         // Create sphere.
         // Returns pointer to sphere.
         Sphere* CreateSphere();
@@ -45,6 +50,10 @@ class Scene
         // Returns a vector of point lights.
         std::vector<PointLight*>* GetPointLights();
 
+        // Get directional lights.
+        // Returns a vector of directional lights.
+        std::vector<DirectionalLight*>* GetDirectionalLights();
+
         // Get spheres.
         // Returns a vector of spheres.
         std::vector<Sphere*>* GetSpheres();
@@ -58,6 +67,9 @@ class Scene
 
         // Point lights.
         std::vector<PointLight*> mPointLights;
+
+        // Directional lights.
+        std::vector<DirectionalLight*> mDirectionalLights;
 
         // Spheres.
         std::vector<Sphere*> mSpheres;
