@@ -115,11 +115,6 @@ void Camera::Roll(float rotation)
 
 glm::mat4 Camera::CalculateOrientationMatrix() const
 {
-    //glm::mat4 orientation;
-    //orientation = glm::rotate(orientation, glm::radians(mRotation.z), glm::vec3(0.f, 0.f, 1.f));
-    //orientation = glm::rotate(orientation, glm::radians(mRotation.y), glm::vec3(1.f, 0.f, 0.f));
-    //orientation = glm::rotate(orientation, glm::radians(mRotation.x), glm::vec3(0.f, 1.f, 0.f));
-    //return orientation;
     return glm::transpose(glm::mat4(
         glm::vec4(mRightDirection, 0.f),
         glm::vec4(mUpDirection, 0.f),

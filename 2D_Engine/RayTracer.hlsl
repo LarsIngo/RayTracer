@@ -215,8 +215,18 @@ void CS_main(uint3 threadID : SV_DispatchThreadID)
         }
     }
 
+    // Blend SSAA.
+    finalColor = finalColor / (ssaa * ssaa);
+
+    // Tone map.
+    finalColor = finalColor / (finalColor + float3(1.f, 1.f, 1.f));
+
+    // Gamma correction.
+    const float gamma = 2.2f;
+    finalColor = pow(finalColor, 1.f / gamma);
+
     // Set pixel color.
-    g_Target[threadID.xy] = float4(finalColor / (ssaa * ssaa), 1.f);
+    g_Target[threadID.xy] = float4(finalColor, 1.f);
 }
 
 HitData RayVsScene(float3 rayOrigin, float3 rayDirection) 
@@ -373,7 +383,7 @@ float3 CalculateColor(float3 rayDirection, float3 hitPoint, float3 position, flo
 
             // Calculate specular.
             float3 specular = pointLight.col * specularFactor;
-            const float specularIntensity = (1.f - diffuseFactor);
+            const float specularIntensity = 1.f - diffuseFactor;
 
             // Combine color.
             color += (diffuse * diffuseFactor + specularIntensity * specular) * distanceFactor;
