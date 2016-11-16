@@ -7,10 +7,12 @@
 #include <Windows.h>
 
 #include <glm/glm.hpp>
+#include "Entity.h"
+#include "PointLight.h"
 #include "RayTracer.h"
 #include "Renderer.h"
 #include "Scene.h"
-#include "Entity.h"
+#include "Sphere.h"
 #include "Texture.h"
 
 glm::vec3 WASDQEinput(float speed, const glm::vec3& front, const glm::vec3& up, const glm::vec3& right);
@@ -31,30 +33,54 @@ int main()
     Entity* sceneBox = scene.CreateEntity();
     sceneBox->mScale *= 20.f;
     sceneBox->mModel.Load("assets/OBJSceneBox.obj");
-    sceneBox->mDiffuseTexPath = L"assets/DefaultDiffuse.png";
+    sceneBox->mDiffuseTexPath = L"assets/DiffuseWhite.png";
+
+    // Point lights.
+    std::vector<PointLight*> pointLights;
+    {
+        PointLight* pointLight;
+        pointLight = scene.CreatePointLight();
+        pointLight->pos = glm::vec3(0.f, 0.f, -2.f);
+        pointLight->col = glm::vec3(1.f, 1.f, 1.f);
+        pointLight->maxDistance = 300.f;
+        pointLights.push_back(pointLight);
+
+        //pointLight = scene.CreatePointLight();
+        //pointLight->pos = glm::vec3(5.f, 0.f, -2.f);
+        //pointLight->col = glm::vec3(1.f, 1.f, 1.f);
+        //pointLight->maxDistance = 300.f;
+        //pointLights.push_back(pointLight);
+
+        //pointLight = scene.CreatePointLight();
+        //pointLight->pos = glm::vec3(-5.f, 0.f, -2.f);
+        //pointLight->col = glm::vec3(1.f, 1.f, 1.f);
+        //pointLight->maxDistance = 300.f;
+        //pointLights.push_back(pointLight);
+    }
+
+    // Spheres.
+    Sphere* sphere = scene.CreateSphere();
+    sphere->pos = glm::vec3(0.f, 0.f, 0.f);
+    sphere->col = glm::vec3(0.f, 0.f, 1.f);
+    sphere->radius = 1.f;
 
     // Entities.
     Entity* model0 = scene.CreateEntity();
     Entity* model1 = scene.CreateEntity();
     model0->mPosition = glm::vec3(1.3f, -1.f, 0.f);
     model1->mPosition = glm::vec3(-1.3f, -1.f, 0.f);
-    model0->mModel.Load("assets/OBJModel.obj");
+    model0->mModel.Load("assets/FBXModel.fbx");
     model1->mModel.Load("assets/OBJModel.obj");
-    model0->mDiffuseTexPath = L"assets/DefaultNormal.png";
-    model1->mDiffuseTexPath = L"assets/DefaultNormal.png";
-
-    // Point lights.
-    PointLight* pointLight = scene.CreatePointLight(); PointLight(glm::vec3(0.f, 0.f, -5.f), glm::vec3(1.f, 1.f, 1.f), 300.f);
-    pointLight->pos = glm::vec3(0.f, 0.f, -1.f);
-    pointLight->col = glm::vec3(1.f, 1.f, 1.f);
-    pointLight->maxDistance = 300.f;
+    model0->mDiffuseTexPath = L"assets/DiffuseRed.png";
+    model1->mDiffuseTexPath = L"assets/DiffuseGreen.png";
 
     // Create application.
     RayTracer rayTracer(640, 640, &scene);
     Renderer* renderer = rayTracer.mRenderer;
 
+    float dt = 0.1f;
     while (rayTracer.Running()) {
-
+        dt += 0.1f;
         // Input.
         float speed = 0.1f;
         glm::vec2 arrowinput = Arrowinput(speed);
@@ -71,8 +97,15 @@ int main()
         }
             
         // Update.
+        // Camera.
         cam->Update(0.1f, 1.f);
-        pointLight->pos += glm::vec3(arrowinput.x, 0.f, arrowinput.y);
+        // Point lights.
+        for (PointLight* pointLight : pointLights) {
+            pointLight->pos += glm::vec3(arrowinput.x, 0.f, arrowinput.y);
+        }
+        // Models.
+        model0->mModel.skeleton.Animate(&model0->mModel.animations[0], dt);
+        model0->mModel.TransformMeshCPU();
         rayTracer.Update(scene);
 
         // Render.

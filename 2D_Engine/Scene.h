@@ -6,6 +6,7 @@
 #include <vector>
 
 class Entity;
+struct Sphere;
 struct PointLight;
 
 // A Scene.
@@ -28,6 +29,10 @@ class Scene
         // Returns pointer to point light.
         PointLight* CreatePointLight();
 
+        // Create sphere.
+        // Returns pointer to sphere.
+        Sphere* CreateSphere();
+
         // Get camera.
         // Returns pointer to camera.
         Camera* GetCamera();
@@ -40,6 +45,10 @@ class Scene
         // Returns a vector of point lights.
         std::vector<PointLight*>* GetPointLights();
 
+        // Get spheres.
+        // Returns a vector of spheres.
+        std::vector<Sphere*>* GetSpheres();
+
     private:
         // Camera.
         Camera mCamera;
@@ -49,4 +58,7 @@ class Scene
 
         // Point lights.
         std::vector<PointLight*> mPointLights;
+
+        // Spheres.
+        std::vector<Sphere*> mSpheres;
 };

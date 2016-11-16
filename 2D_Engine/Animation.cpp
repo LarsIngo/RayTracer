@@ -75,7 +75,7 @@ void Animation::CalcInterpolatedRotation(aiQuaternion& rotation, float animation
     assert(nKey < channel->rotKeys.size());
     float deltaTime = (float)(channel->rotKeys[nKey].time - channel->rotKeys[cKey].time);
     float factor = (animationTime - (float)channel->rotKeys[cKey].time) / deltaTime;
-    assert(factor >= 0.0f && factor <= 1.0f);
+    //assert(factor >= 0.0f && factor <= 1.0f);
     const aiQuaternion& startRotationQ = channel->rotKeys[cKey].value;
     const aiQuaternion& endRotationQ = channel->rotKeys[nKey].value;
     aiQuaternion::Interpolate(rotation, startRotationQ, endRotationQ, factor);
@@ -94,7 +94,7 @@ void Animation::CalcInterpolatedPosition(glm::vec3& translation, float animation
     assert(nKey < channel->posKeys.size());
     float deltaTime = (float)(channel->posKeys[nKey].time - channel->posKeys[cKey].time);
     float factor = (animationTime - (float)channel->posKeys[cKey].time) / deltaTime;
-    assert(factor >= 0.0f && factor <= 1.0f);
+    //assert(factor >= 0.0f && factor <= 1.0f);
     const glm::vec3& start = channel->posKeys[cKey].value;
     const glm::vec3& end = channel->posKeys[nKey].value;
     const glm::vec3 delta = end - start;
@@ -113,7 +113,7 @@ void Animation::CalcInterpolatedScaling(glm::vec3& scaling, float animationTime,
     assert(nKey < channel->sclKeys.size());
     float deltaTime = (float)(channel->sclKeys[nKey].time - channel->sclKeys[cKey].time);
     float factor = (animationTime - (float)channel->sclKeys[cKey].time) / deltaTime;
-    assert(factor >= 0.0f && factor <= 1.0f);
+    //assert(factor >= 0.0f && factor <= 1.0f);
     const glm::vec3& start = channel->sclKeys[cKey].value;
     const glm::vec3& end = channel->sclKeys[nKey].value;
     const glm::vec3 delta = end - start;

@@ -191,6 +191,7 @@
     <ClInclude Include="Shader.h" />
     <ClInclude Include="Skeleton.h" />
     <ClInclude Include="SkinVertex.h" />
+    <ClInclude Include="Sphere.h" />
     <ClInclude Include="Texture.h" />
     <ClInclude Include="Vertex.h" />
     <ClInclude Include="Renderer.h" />

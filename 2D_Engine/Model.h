@@ -25,6 +25,9 @@ class Model
         // path Path to file.
         void Load(std::string path);
 
+        // Vertex list (bind pose).
+        std::vector<Geometry::SkinVertex> mVerticesBindPose;
+
         // Vertex list.
         std::vector<Geometry::SkinVertex> mVertices;
 
@@ -40,6 +43,9 @@ class Model
         // Animations to animate skeleton.
         std::vector<Geometry::Animation> animations;
 
+        // Transform mesh on CPU.
+        void TransformMeshCPU();
+
     private:
         struct MeshEntry {
             unsigned int numIndices = 0;
@@ -51,6 +57,6 @@ class Model
         void LoadAnimations(const aiScene* aScene);
 
         // Skin vertices on CPU. Used only for debugging purposes.
-        void MeshTransform(const std::vector<glm::mat4>& transforms);
+        void MeshTransform(const std::vector<glm::mat4>& transforms, const std::vector<glm::mat3>& transformsIT);
 
 };

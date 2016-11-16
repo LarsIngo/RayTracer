@@ -75,7 +75,8 @@ void Model::Load(std::string path)
     //mVertices[5] = Vertex(glm::vec3(-5.f, -5.f, 5.f), glm::vec3(0.f, 0.f, -1.f), glm::vec2(0.f, 1.f));
 }
 
-void Model::LoadMeshes(const aiScene* aScene) {
+void Model::LoadMeshes(const aiScene* aScene) 
+{
     std::vector<MeshEntry> entries;
     entries.resize(aScene->mNumMeshes);
 
@@ -94,6 +95,7 @@ void Model::LoadMeshes(const aiScene* aScene) {
 
     // Resize vectors to fit.
     mVertices.resize(numVertices);
+    mVerticesBindPose.resize(numVertices);
     mIndices.resize(numIndices);
 
     std::vector<unsigned int> weightCounter(numVertices, 0);
@@ -115,6 +117,7 @@ void Model::LoadMeshes(const aiScene* aScene) {
                 CpyVec(vert.tangent, aMesh->mTangents[i]);
             else
                 vert.tangent = glm::vec3(0.f, 0.f, 0.f);
+            mVerticesBindPose[numVertices] = vert;
             ++numVertices;
         }
         // Load indices.
@@ -138,41 +141,61 @@ void Model::LoadMeshes(const aiScene* aScene) {
                 assert(count + 1 <= 4);
                 mVertices[vertexID].boneIDs[count] = boneIndex;
                 mVertices[vertexID].weights[count] = weight;
+                mVerticesBindPose[vertexID].boneIDs[count] = boneIndex;
+                mVerticesBindPose[vertexID].weights[count] = weight;
                 ++count;
             }
         }
     }
 }
 
-void Model::LoadAnimations(const aiScene* aScene) {
+void Model::LoadAnimations(const aiScene* aScene) 
+{
     animations.resize(aScene->mNumAnimations);
 
-    for (std::size_t a = 0; a < animations.size(); ++a) {
+    for (std::size_t a = 0; a < animations.size(); ++a) 
+    {
         animations[a].Load(aScene->mAnimations[a]);
     }
 }
 
-void Model::MeshTransform(const std::vector<glm::mat4>& transforms) {
-    //// CPU-skinning.
-    //unsigned int boneIDs[4];
-    //float boneWeights[4];
+// Transform mesh on CPU.
+void Model::TransformMeshCPU()
+{
+    const std::vector<glm::mat4>& transforms = skeleton.GetFinalTransformations();
+    const std::vector<glm::mat3>& transformsIT = skeleton.GetFinalTransformationsIT();
+    MeshTransform(transforms, transformsIT);
+}
 
-    //// Vertex shader
-    //for (unsigned int v = 0; v < vertices.size(); ++v) {
-    //    for (unsigned int i = 0; i < 4; ++i) {
-    //        boneIDs[i] = vertices[v].boneIDs[i];
-    //        boneWeights[i] = vertices[v].weights[i];
-    //    }
+void Model::MeshTransform(const std::vector<glm::mat4>& bones, const std::vector<glm::mat3>& bonesIT)
+{
+    // CPU-skinning.
+    unsigned int vertexBoneIDs[4];
+    float vertexWeights[4];
 
-    //    assert(abs(1.f - boneWeights[0] + boneWeights[1] + boneWeights[2] + boneWeights[3]) < 0.01f); // Assert weights sum equals 1.
+    // Vertex shader
+    for (std::size_t v = 0; v < mVertices.size(); ++v) {
+        for (unsigned int i = 0; i < 4; ++i) {
+            vertexBoneIDs[i] = mVertices[v].boneIDs[i];
+            vertexWeights[i] = mVertices[v].weights[i];
+        }
 
-    //    glm::mat4 boneTransform = transforms[boneIDs[0]] * boneWeights[0];
-    //    boneTransform += transforms[boneIDs[1]] * boneWeights[1];
-    //    boneTransform += transforms[boneIDs[2]] * boneWeights[2];
-    //    boneTransform += transforms[boneIDs[3]] * boneWeights[3];
+        glm::vec3 vertexPosition = mVerticesBindPose[v].position;
+        glm::vec3 vertexNormal = mVerticesBindPose[v].normal;
 
-    //    VertexType::SkinVertex& vert = vertices[v];
-    //    vert.position = boneTransform * glm::vec4(vert.position, 1.f);
-    //    vert.normal = boneTransform * glm::vec4(vert.normal, 0.f);
-    //}
+        //assert(abs(1.f - vertexWeights[0] + vertexWeights[1] + vertexWeights[2] + vertexWeights[3]) < 0.01f); // Assert weights sum equals 1.
+
+        glm::vec4 position = (bones[vertexBoneIDs[0]] * glm::vec4(vertexPosition, 1.0)) * vertexWeights[0];
+        position += (bones[vertexBoneIDs[1]] * glm::vec4(vertexPosition, 1.0)) * vertexWeights[1];
+        position += (bones[vertexBoneIDs[2]] * glm::vec4(vertexPosition, 1.0)) * vertexWeights[2];
+        position += (bones[vertexBoneIDs[3]] * glm::vec4(vertexPosition, 1.0)) * vertexWeights[3];
+
+        glm::vec3 normal = (bonesIT[vertexBoneIDs[0]] * vertexNormal) * vertexWeights[0];
+        normal += (bonesIT[vertexBoneIDs[1]] * vertexNormal) * vertexWeights[1];
+        normal += (bonesIT[vertexBoneIDs[2]] * vertexNormal) * vertexWeights[2];
+        normal += (bonesIT[vertexBoneIDs[3]] * vertexNormal) * vertexWeights[3];
+
+        mVertices[v].position = position;
+        mVertices[v].normal = normal;
+    }
 }

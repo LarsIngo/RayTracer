@@ -1,6 +1,7 @@
 #include "Camera.h"
 
 #include <glm/gtc/matrix_transform.hpp>
+#include <iostream>
 #include <Windows.h>
 
 Camera::Camera() 
@@ -77,6 +78,30 @@ void Camera::Update(float speed, float dt)
     mRightDirection = glm::vec4(1.f, 0.f, 0.f, 0.f) * mOrientationMatrix;
     mUpDirection = glm::vec4(0.f, 1.f, 0.f, 0.f) * mOrientationMatrix;
     mViewMatrix = CalculateViewMatrix();
+
+    // Ray vs Plane.
+    glm::vec3 rayOrigin = mPosition;
+    glm::vec3 rayDirection = mFrontDirection;
+    glm::vec3 v0 = glm::vec3(0.f, 0.f, 10.f);
+    glm::vec3 v1 = glm::vec3(0.f, 20.f, 10.f);
+    glm::vec3 v2 = glm::vec3(20.f, 0.f, 10.f);
+    v0 = mViewMatrix * glm::vec4(v0, 1.f);
+    v1 = mViewMatrix * glm::vec4(v1, 1.f);
+    v2 = mViewMatrix * glm::vec4(v2, 1.f);
+    rayOrigin = glm::vec3(0.f, 0.f, 1.f);
+    rayDirection = glm::vec3(0.f, 0.f, 1.f);
+    glm::vec3 e1 = v1 - v0;
+    glm::vec3 e2 = v2 - v0;
+    glm::vec3 n = glm::normalize(glm::cross(e1, e2));
+    float t = glm::dot(n, -rayDirection);
+    if (t > 0.001f) {
+        float d = -glm::dot(n, v0);
+        t = (d + glm::dot(n, rayOrigin)) / t;
+        if (t > -0.001f) 
+        {
+            std::cout << t << std::endl;
+        }
+    }
 
 }
 

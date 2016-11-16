@@ -1,6 +1,7 @@
 #pragma once
 
 #include "EntityEntry.h"
+#include "Sphere.h"
 #include "PointLight.h"
 #include "Vertex.h"
 #include <vector>
@@ -43,11 +44,17 @@ class RayTracer
         // Max number of point lights.
         const int mMaxNumPointLights = 10;
 
+        // Max number of spheres.
+        const int mMaxNumSpheres = 10;
+
         // Number of bounces.
         int mNumBounces = 1;
 
         // Max number of entities.
         const int mMaxNumOfEntities = 10;
+
+        // Super sampling anti analyzing. Should be multiples of two.
+        const int mSSAA = 1;
 
         // Renderer to render window.
         Renderer* mRenderer = nullptr;
@@ -67,6 +74,12 @@ class RayTracer
 
         // Structured buffer contaning point light data.
         ID3D11ShaderResourceView* mPointLightBuffer;
+
+        // Vector of spheres.
+        std::vector<Sphere> mSpheres;
+
+        // Structured buffer contaning sphere data.
+        ID3D11ShaderResourceView* mSphereBuffer;
 
         // Vector of entity entries.
         std::vector<EntityEntry> mEntityEntries;
@@ -101,23 +114,29 @@ class RayTracer
         // Meta data.
         struct MetaData {
             // Number of vertices.
-            int numOfVertices;
+            int numVertices;
             // Number of point lights.
-            int numOfPointLights;
+            int numPointLights;
+            // Number of spheres.
+            int numSpheres;
             // Number of bounces.
             int numBounces;
             // Number of entites.
             int numEntities;
+            // Amount of super sampling anti analyzing.
+            int ssaa;
+            float pad[2];
 
             // Constructor.
-            MetaData(int numOfVertices, int numOfPointLights, int numBounces, int numEntities);
+            MetaData(int numVertices, int numPointLights, int numSpheres, int numBounces, int numEntities, int ssaa);
         };
 
         struct ConstData {
-            // Screen width in pixels.
+            // Frame width in pixels.
             int width;
-            // Screen height in pixels.
+            // Frame height in pixels.
             int height;
+            // Amount of super sampling anti analyzing.
             float pad[2];
 
             // Constructor.

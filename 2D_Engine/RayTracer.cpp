@@ -10,7 +10,9 @@
 #include "Renderer.h"
 #include "Scene.h"
 #include "Shader.h"
+#include "Sphere.h"
 #include "SkinVertex.h"
+#include "PointLight.h"
 #include "Texture.h"
 
 RayTracer::RayTracer(unsigned int width, unsigned int height, Scene* scene) 
@@ -18,10 +20,12 @@ RayTracer::RayTracer(unsigned int width, unsigned int height, Scene* scene)
     mRenderer = new Renderer(width, height);
     mShader = new Shader(&mRenderer->mDevice, &mRenderer->mDeviceContext);
     mShader->LoadCS("RayTracer.hlsl");
+
     // Buffers.
     mShader->CreateConstantBuffer<ConstData>(&ConstData(width, height), &mConstBuffer);
     mShader->CreateCPUwriteGPUreadStructuredBuffer<Vertex>(mMaxNumVertices, &mVertexBuffer);
     mShader->CreateCPUwriteGPUreadStructuredBuffer<PointLight>(mMaxNumPointLights, &mPointLightBuffer);
+    mShader->CreateCPUwriteGPUreadStructuredBuffer<Sphere>(mMaxNumSpheres, &mSphereBuffer);
     mShader->CreateCPUwriteGPUreadStructuredBuffer<EntityEntry>(mMaxNumOfEntities, &mEntityEntryBuffer);
     mShader->CreateCPUwriteGPUreadStructuredBuffer<MetaData>(1, &mMetaBuffer);
 
@@ -42,20 +46,15 @@ RayTracer::RayTracer(unsigned int width, unsigned int height, Scene* scene)
     }
     mShader->CreateTexture2DArray(DXGI_FORMAT_R8G8B8A8_UNORM, 64, 64, 1, texturesResources, &diffuseTexArray64x64Buffer);
 
-    // Default texture.
-    Texture* defaultDiffuseTex = new Texture(&mRenderer->mDevice, &mRenderer->mDeviceContext);
-    defaultDiffuseTex->Load(L"assets/DefaultDiffuse.png");
-
     // Bind.
     mSRVs.push_back(mVertexBuffer);
     mSRVs.push_back(mPointLightBuffer);
+    mSRVs.push_back(mSphereBuffer);
     mSRVs.push_back(mEntityEntryBuffer);
     mSRVs.push_back(mMetaBuffer);
-    mSRVs.push_back(defaultDiffuseTex->mSRV);
     mSRVs.push_back(diffuseTexArray64x64Buffer);
     mShader->BindCS("RayTracer", &mRenderer->mBackBufferUAV, 1, mSRVs.data(), mSRVs.size(), mConstBuffer);
 
-    delete defaultDiffuseTex;
     diffuseTexArray64x64Buffer->Release();
     for (Texture* tex : textures)
         delete tex;
@@ -66,6 +65,7 @@ RayTracer::~RayTracer()
     mShader->UnbindCS(1, mSRVs.size());
     mVertexBuffer->Release();
     mPointLightBuffer->Release();
+    mSphereBuffer->Release();
     mEntityEntryBuffer->Release();
     mMetaBuffer->Release();
     mConstBuffer->Release();
@@ -100,7 +100,7 @@ void RayTracer::Update(Scene& scene)
                 const Geometry::SkinVertex& skinVertex = model.mVertices[index];
                 Vertex& vertex = mVertices[i + offset];
                 vertex.pos = glm::vec3(viewMatrix * (modelMatrix * glm::vec4(skinVertex.position, 1.f)));
-                vertex.norm = glm::vec3(viewMatrix * (modelMatrix * glm::vec4(skinVertex.normal, 0.f)));
+                vertex.norm = glm::normalize(glm::vec3(viewMatrix * (modelMatrix * glm::vec4(skinVertex.normal, 0.f))));
                 vertex.uv = skinVertex.textureCoordinate;
             }
         }
@@ -113,6 +113,14 @@ void RayTracer::Update(Scene& scene)
         PointLight& pointLight = mPointLights[i] = *scene.mPointLights[i];
         pointLight.pos = glm::vec3(viewMatrix * glm::vec4(pointLight.pos, 1.f));
     }
+
+    // Transform spheres to view space.
+    mSpheres.resize(scene.mSpheres.size());
+    for (std::size_t i = 0; i < scene.mSpheres.size(); ++i)
+    {
+        Sphere& sphere = mSpheres[i] = *scene.mSpheres[i];
+        sphere.pos = glm::vec3(viewMatrix * glm::vec4(sphere.pos, 1.f));
+    }
 }
 
 void RayTracer::Render(Scene& scene) 
@@ -120,11 +128,13 @@ void RayTracer::Render(Scene& scene)
     // Update buffers.
     assert(mVertices.size() <= mMaxNumVertices);
     assert(mPointLights.size() <= mMaxNumPointLights);
+    assert(mSpheres.size() <= mMaxNumSpheres);
     assert(scene.mEntites.size() <= mMaxNumOfEntities);
     mShader->WriteStructuredBuffer<Vertex>(mVertices.data(), mVertices.size(), mVertexBuffer);
     mShader->WriteStructuredBuffer<PointLight>(mPointLights.data(), mPointLights.size(), mPointLightBuffer);
+    mShader->WriteStructuredBuffer<Sphere>(mSpheres.data(), mSpheres.size(), mSphereBuffer);
     mShader->WriteStructuredBuffer<EntityEntry>(mEntityEntries.data(), mEntityEntries.size(), mEntityEntryBuffer);
-    mShader->WriteStructuredBuffer<MetaData>(&MetaData(mVertices.size(), mPointLights.size(), mNumBounces, scene.mEntites.size()), 1, mMetaBuffer);
+    mShader->WriteStructuredBuffer<MetaData>(&MetaData(mVertices.size(), mPointLights.size(), mSpheres.size(), mNumBounces, scene.mEntites.size(), mSSAA), 1, mMetaBuffer);
 
     // Run compute shader.
     mShader->ExecuteCS(glm::vec3(mRenderer->mWidth / 32, mRenderer->mHeight / 32, 1));
@@ -133,12 +143,14 @@ void RayTracer::Render(Scene& scene)
     mRenderer->mSwapChain->Present(0,0);
 }
 
-RayTracer::MetaData::MetaData(int numOfVertices, int numOfPointLights, int numBounces, int numEntities)
+RayTracer::MetaData::MetaData(int numVertices, int numPointLights, int numSpheres, int numBounces, int numEntities, int ssaa)
 {
-    this->numOfVertices = numOfVertices;
-    this->numOfPointLights = numOfPointLights;
+    this->numVertices = numVertices;
+    this->numPointLights = numPointLights;
+    this->numSpheres = numSpheres;
     this->numBounces = numBounces;
     this->numEntities = numEntities;
+    this->ssaa = ssaa;
 }
 
 RayTracer::ConstData::ConstData(int width, int height)

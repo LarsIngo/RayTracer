@@ -32,8 +32,4 @@ class Entity
         // Textures.
         // Diffuse path.
         std::wstring mDiffuseTexPath = L"None";
-        //// Normal.
-        //Texture* mNormalTex = nullptr;
-        //// Metal.
-        //Texture* mMetalTex = nullptr;
 };
