@@ -184,7 +184,6 @@
     <ClInclude Include="DxAssert.h" />
     <ClInclude Include="Camera.h" />
     <ClInclude Include="Entity.h" />
-    <ClInclude Include="EntityEntry.h" />
     <ClInclude Include="MathFunctions.h" />
     <ClInclude Include="Model.h" />
     <ClInclude Include="PointLight.h" />

@@ -74,18 +74,6 @@ struct Sphere
 // Sphere buffer.
 StructuredBuffer<Sphere> g_SphereBuffer : register(t3);
 
-// Entity entries.
-struct EntityEntry
-{
-    // Index to first vertex in vertex buffer.
-    int offset;
-    // Number of vertices in entity.
-    int numVertices;
-    float2 pad;
-};
-// Vertex buffer.
-StructuredBuffer<EntityEntry> g_EntityEntries : register(t4);
-
 // Meta data.
 struct MetaData 
 {
@@ -99,17 +87,18 @@ struct MetaData
     int numSpheres;
     // Number of bounces.
     int numBounces;
-    // Number of entities.
-    int numEntities;
+    // Energy coefficient.
+    float energyCoefficient;
     // Amount of super sampling anti analyzing.
     int ssaa;
-    float pad;
+    // Field of view.
+    float fov;
 };
 // Meta buffer.
-StructuredBuffer<MetaData> g_MetaBuffer : register(t5);
+StructuredBuffer<MetaData> g_MetaBuffer : register(t4);
 
 // Texture array.
-Texture2DArray<float4> g_TextureArray : register(t6);
+Texture2DArray<float4> g_TextureArray : register(t5);
 
 // Hit data.
 struct HitData 
@@ -158,11 +147,6 @@ Vertex Interpolate(float3 hitPoint, Vertex v0, Vertex v1, Vertex v2);
 // Return color.
 float3 CalculateColor(float3 rayDirecetion, float3 hitPoint, float3 position, float3 normal, float3 diffuse);
 
-// Get id of which entity this vertex belongs to.
-// vertexIndex Index of vertex.
-// Return id.
-int GetEntityID(int vertexIndex);
-
 // Calculate normal for vertex with normal map.
 // normal Normal from interpolated vertex.
 // tangent Tangent from interpolated vertex.
@@ -175,24 +159,25 @@ float3 CalculateNormal(float3 normal, float3 tangent, float3 normalMap);
 void CS_main(uint3 threadID : SV_DispatchThreadID)
 {
     // Contants.
+    const float energyCoefficient = g_MetaBuffer[0].energyCoefficient;
     const int ssaa = g_MetaBuffer[0].ssaa;
     const int width = g_width;
     const int height = g_height;
     const int numBounces = g_MetaBuffer[0].numBounces;
-    const float fov = 3.14f / 4.f;
+    const float fov = g_MetaBuffer[0].fov;
     const float focalDistance = 0.1f;
     const float3 focalPoint = float3(0.f, 0.f, -focalDistance);
     const float aspectRatio = float(width) / height;
     const float heightbyWidth = 1.f / aspectRatio;
-    const float R = tan(fov / 2.f) * focalDistance;
-    const float U = heightbyWidth * R;
+    float R = tan(fov / 2.f) * focalDistance;
+    float U = heightbyWidth * R;
 
-    const float pxWidth = 2.f * R / width;
-    const float pxHeight = 2.f * U / height;
-    const float pxX = pxWidth / (ssaa + 1);
-    const float pxY = pxHeight / (ssaa + 1);
-    const float pxXOffset = pxWidth * threadID.x;
-    const float pxYOffset = pxHeight * threadID.y;
+    float pxWidth = 2.f * R / width;
+    float pxHeight = 2.f * U / height;
+    float pxX = pxWidth / (ssaa + 1);
+    float pxY = pxHeight / (ssaa + 1);
+    float pxXOffset = pxWidth * threadID.x;
+    float pxYOffset = pxHeight * threadID.y;
 
     float3 finalColor = float3(0.f, 0.f, 0.f);
     for (int y = 1; y <= ssaa; ++y)
@@ -235,11 +220,11 @@ void CS_main(uint3 threadID : SV_DispatchThreadID)
                     if (vertex.diffTexID >= 0)
                         diffuse = g_TextureArray.SampleLevel(g_SampAni, float3(vertex.uv, vertex.diffTexID), 0).xyz;
                     else
-                        diffuse = float3(1.f, 0.f, 0.f);
+                        diffuse = float3(0.2f, 0.2f, 0.2f);
                 }
 
                 // Get point color.
-                float energyFactor = pow(0.85f, i + 1); // Energy loss for each bounce.
+                float energyFactor = pow(energyCoefficient, i + 1); // Energy loss for each bounce.
                 finalColor += CalculateColor(rayDirection, hitPoint, position, normal, diffuse) * energyFactor;
 
                 // Bounce ray.
@@ -257,7 +242,7 @@ void CS_main(uint3 threadID : SV_DispatchThreadID)
     //finalColor = pow(finalColor, 1.f / gamma);
 
     // Tone map. Sets finalColor in range [0, 1)
-    finalColor = finalColor / (finalColor + float3(1.f, 1.f, 1.f));
+    //finalColor = finalColor / (finalColor + float3(1.f, 1.f, 1.f));
 
     // Set pixel color.
     g_Target[threadID.xy] = float4(finalColor, 1.f);
@@ -311,7 +296,7 @@ float RayVsTriangle(float3 rayOrigin, float3 rayDirection, float3 v0, float3 v1,
         float u = det * determinant(float3x3(d, s, e2));
         float v = det * determinant(float3x3(d, e1, s));
 
-        if ((u >= -0.001f && u <= 1.001f) && (v >= -0.001f && v <= (1.001f - u)))
+        if ((u >= -0.001f && u <= 1.001f) && (v >= -0.001f && v <= (1.001f - u))) // TODO
         {
             return det * determinant(float3x3(s, e1, e2));
         }
@@ -446,19 +431,6 @@ float3 CalculateColor(float3 rayDirection, float3 hitPoint, float3 position, flo
     }
 
     return color;
-}
-
-int GetEntityID(int vertexIndex)
-{
-    int numEntities = g_MetaBuffer[0].numEntities;
-    for (int i = 0; i < numEntities; ++i)
-    {
-        int offset = g_EntityEntries[i].offset;
-        int numVertices = g_EntityEntries[i].numVertices;
-        if (vertexIndex >= offset && vertexIndex < offset + numVertices)
-            return i;
-    }
-    return -1;
 }
 
 float3 CalculateNormal(float3 normal, float3 tangent, float3 normalMap)

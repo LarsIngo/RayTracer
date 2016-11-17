@@ -1,4 +1,5 @@
 #include "Renderer.h"
+#include "DxAssert.h"
 #include "Texture.h"
 
 Renderer::Renderer(unsigned int width, unsigned int height) 
@@ -132,11 +133,11 @@ void Renderer::Initialise()
     scDesc.SwapEffect = DXGI_SWAP_EFFECT_DISCARD;	// This makes the display driver select the most efficient technique.
     scDesc.Flags = 0;								// No additional options.
 
-    D3D11CreateDeviceAndSwapChain(
+    DxAssert(D3D11CreateDeviceAndSwapChain(
         nullptr,					// Use the default adapter.
         D3D_DRIVER_TYPE_HARDWARE,	// Use the graphics card for rendering. Other options include software emulation.
         NULL,						// NULL since we don't use software emulation.
-        D3D11_CREATE_DEVICE_DEBUG,						// No creation flags.
+        D3D11_CREATE_DEVICE_DEBUG | D3D11_CREATE_DEVICE_SINGLETHREADED,	// Dbg creation flags.
         nullptr,					// Array of feature levels to try using. With null the following are used 11.0, 10.1, 10.0, 9.3, 9.2, 9.1.
         0,							// The array above has 0 elements.
         D3D11_SDK_VERSION,			// Always use this.
@@ -145,7 +146,7 @@ void Renderer::Initialise()
         &mDevice,					// [out] The created device.
         nullptr,					// [out] The highest supported feature level (from array).
         &mDeviceContext				// [out] The created device context.
-    );
+    ), S_OK);
 
     D3D11_VIEWPORT vp;
     vp.Width = (float)mWidth;
@@ -157,8 +158,8 @@ void Renderer::Initialise()
     mDeviceContext->RSSetViewports(1, &vp);
 
     ID3D11Texture2D* backBuffer;
-    mSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&backBuffer));
-    mDevice->CreateUnorderedAccessView(backBuffer, nullptr, &mBackBufferUAV);
+    DxAssert(mSwapChain->GetBuffer(0, __uuidof(ID3D11Texture2D), reinterpret_cast<void**>(&backBuffer)), S_OK);
+    DxAssert(mDevice->CreateUnorderedAccessView(backBuffer, nullptr, &mBackBufferUAV), S_OK);
     backBuffer->Release();
 }
 

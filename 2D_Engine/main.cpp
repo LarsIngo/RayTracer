@@ -36,25 +36,62 @@ int main()
     Entity* sceneBox = scene.CreateEntity();
     sceneBox->mScale *= 20.f;
     sceneBox->mModel.Load("assets/OBJSceneBox.obj");
-    sceneBox->mDiffuseTextureID = scene.AddTexture(L"assets/DiffuseBrick.png");
+    //sceneBox->mDiffuseTextureID = scene.AddTexture(L"assets/DiffuseBrick.png");
     //sceneBox->mNormalTextureID = scene.AddTexture(L"assets/NormalBrick.png");
 
     // Point lights.
     std::vector<PointLight*> pointLights;
     {
+        float space = 7.f;
+
         PointLight* pointLight;
         pointLight = scene.CreatePointLight();
-        pointLight->pos = glm::vec3(0.f, 0.f, -2.f);
+        pointLight->pos = glm::vec3(0.f, 0.f, -space / 2.f);
         pointLight->col = glm::vec3(1.f, 1.f, 1.f);
         pointLights.push_back(pointLight);
 
         //pointLight = scene.CreatePointLight();
-        //pointLight->pos = glm::vec3(5.f, 0.f, -2.f);
+        //pointLight->pos = glm::vec3(0.f, 0.f, space / 2.f);
         //pointLight->col = glm::vec3(1.f, 1.f, 1.f);
         //pointLights.push_back(pointLight);
 
         //pointLight = scene.CreatePointLight();
-        //pointLight->pos = glm::vec3(-5.f, 0.f, -2.f);
+        //pointLight->pos = glm::vec3(-space, space, space);
+        //pointLight->col = glm::vec3(1.f, 1.f, 1.f);
+        //pointLights.push_back(pointLight);
+
+        //pointLight = scene.CreatePointLight();
+        //pointLight->pos = glm::vec3(space, space, space);
+        //pointLight->col = glm::vec3(1.f, 1.f, 1.f);
+        //pointLights.push_back(pointLight);
+
+        //pointLight = scene.CreatePointLight();
+        //pointLight->pos = glm::vec3(-space, -space, space);
+        //pointLight->col = glm::vec3(1.f, 1.f, 1.f);
+        //pointLights.push_back(pointLight);
+
+        //pointLight = scene.CreatePointLight();
+        //pointLight->pos = glm::vec3(space, -space, space);
+        //pointLight->col = glm::vec3(1.f, 1.f, 1.f);
+        //pointLights.push_back(pointLight);
+
+        //pointLight = scene.CreatePointLight();
+        //pointLight->pos = glm::vec3(-space, space, -space);
+        //pointLight->col = glm::vec3(1.f, 1.f, 1.f);
+        //pointLights.push_back(pointLight);
+
+        //pointLight = scene.CreatePointLight();
+        //pointLight->pos = glm::vec3(space, space, -space);
+        //pointLight->col = glm::vec3(1.f, 1.f, 1.f);
+        //pointLights.push_back(pointLight);
+
+        //pointLight = scene.CreatePointLight();
+        //pointLight->pos = glm::vec3(-space, -space, -space);
+        //pointLight->col = glm::vec3(1.f, 1.f, 1.f);
+        //pointLights.push_back(pointLight);
+
+        //pointLight = scene.CreatePointLight();
+        //pointLight->pos = glm::vec3(space, -space, -space);
         //pointLight->col = glm::vec3(1.f, 1.f, 1.f);
         //pointLights.push_back(pointLight);
     }
@@ -70,7 +107,7 @@ int main()
     // Spheres.
     {
         Sphere* sphere = scene.CreateSphere();
-        sphere->pos = glm::vec3(0.f, 0.f, 0.f);
+        sphere->pos = glm::vec3(0.f, 0.f, 3.f);
         sphere->col = glm::vec3(0.f, 0.f, 1.f);
         sphere->radius = 1.f;
     }
@@ -92,10 +129,10 @@ int main()
     Renderer* renderer = rayTracer.mRenderer;
 
     // Set Frame Latency.
-    IDXGIDevice1 * pDXGIDevice;
-    DxAssert(renderer->mDevice->QueryInterface(__uuidof(IDXGIDevice), (void **)&pDXGIDevice), S_OK);
-    DxAssert(pDXGIDevice->SetMaximumFrameLatency(1), S_OK);
-    pDXGIDevice->Release();
+    //IDXGIDevice1 * pDXGIDevice;
+    //DxAssert(renderer->mDevice->QueryInterface(__uuidof(IDXGIDevice), (void **)&pDXGIDevice), S_OK);
+    //DxAssert(pDXGIDevice->SetMaximumFrameLatency(1), S_OK);
+    //pDXGIDevice->Release();
 
     long long lastTime = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
     float dt = 0.f;
@@ -126,10 +163,34 @@ int main()
             std::cout << "SSAA: " << rayTracer.mSSAA << std::endl;
         }
 
-        if (GetAsyncKeyState(VK_F4) && rayTracer.mSSAA < 8)
+        if (GetAsyncKeyState(VK_F4) && rayTracer.mSSAA < 4)
         {
             rayTracer.mSSAA *= 2;
             std::cout << "SSAA: " << rayTracer.mSSAA << std::endl;
+        }
+
+        if (GetAsyncKeyState(VK_F5) && rayTracer.mFOV > 3.14f / 8.f )
+        {
+            rayTracer.mFOV -= 0.1f;
+            std::cout << "FOV: " << rayTracer.mFOV << std::endl;
+        }
+
+        if (GetAsyncKeyState(VK_F6) && rayTracer.mFOV < 3.14f / 2.f)
+        {
+            rayTracer.mFOV += 0.1f;
+            std::cout << "FOV: " << rayTracer.mFOV << std::endl;
+        }
+
+        if (GetAsyncKeyState(VK_F7) && rayTracer.mEnergyCoefficient > 0.f)
+        {
+            rayTracer.mEnergyCoefficient -= 0.05f;
+            std::cout << "Energy coefficient: " << rayTracer.mEnergyCoefficient << std::endl;
+        }
+
+        if (GetAsyncKeyState(VK_F8) && rayTracer.mEnergyCoefficient < 1.f)
+        {
+            rayTracer.mEnergyCoefficient += 0.05f;
+            std::cout << "Energy coefficient: " << rayTracer.mEnergyCoefficient << std::endl;
         }
             
         // Camera.

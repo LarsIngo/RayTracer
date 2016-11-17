@@ -1,7 +1,6 @@
 #pragma once
 
 #include "DirectionalLight.h"
-#include "EntityEntry.h"
 #include "Sphere.h"
 #include "PointLight.h"
 #include "Vertex.h"
@@ -49,16 +48,19 @@ class RayTracer
         const int mMaxNumDirectionalLights = 10;
 
         // Max number of spheres.
-        const int mMaxNumSpheres = 10;
+        const int mMaxNumSpheres = 15;
 
         // Number of bounces.
         int mNumBounces = 1;
 
-        // Max number of entities.
-        static const int mMaxNumOfEntities = 10;
+        // Energi coefficient.
+        float mEnergyCoefficient = 0.85f;
 
         // Super sampling anti analyzing. Should be multiples of two.
         int mSSAA = 1;
+
+        // Field of view.
+        float mFOV = 3.14f / 4.f;
 
         // Renderer to render window.
         Renderer* mRenderer = nullptr;
@@ -96,12 +98,6 @@ class RayTracer
         // Structured buffer contaning sphere data.
         ID3D11ShaderResourceView* mSphereBuffer;
 
-        // Vector of entity entries.
-        std::vector<EntityEntry> mEntityEntries;
-
-        // Structured buffer contaning entity entry data.
-        ID3D11ShaderResourceView* mEntityEntryBuffer;
-
         // Structured buffer contaning metadata.
         ID3D11ShaderResourceView* mMetaBuffer;
 
@@ -123,14 +119,15 @@ class RayTracer
             int numSpheres;
             // Number of bounces.
             int numBounces;
-            // Number of entites.
-            int numEntities;
+            // Energy coefficient.
+            float energyCoefficient;
             // Amount of super sampling anti analyzing.
             int ssaa;
-            float pad;
+            // Field of view.
+            float fov;
 
             // Constructor.
-            MetaData(int numVertices, int numPointLights, int numDirectionalLights, int numSpheres, int numBounces, int numEntities, int ssaa);
+            MetaData(int numVertices, int numPointLights, int numDirectionalLights, int numSpheres, int numBounces, float energyCoefficient, int ssaa, float fov);
         };
 
         struct ConstData {

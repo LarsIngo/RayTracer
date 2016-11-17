@@ -13,5 +13,5 @@ Profiler::Profiler(const std::string& name)
 Profiler::~Profiler()
 {
     long long deltaTime = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count() - start;
-    std::cout << (double)deltaTime / 1000.f << std::endl;
+    std::cout << deltaTime << std::endl;
 }
