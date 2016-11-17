@@ -27,7 +27,11 @@ struct Vertex
     float3 tang;
     // Uv.
     float2 uv;
-    float pad;
+    // Diffuse texture ID.
+    int diffTexID;
+    // Normal texture ID.
+    int normTexID;
+    float3 pad;
 };
 // Vertex buffer.
 StructuredBuffer<Vertex> g_VertexBuffer : register(t0);
@@ -104,11 +108,8 @@ struct MetaData
 // Meta buffer.
 StructuredBuffer<MetaData> g_MetaBuffer : register(t5);
 
-// Diffuse texture array.
-Texture2DArray<float4> g_DiffuseTextureArray : register(t6);
-
-// Normal texture array.
-Texture2DArray<float4> g_NormalTextureArray : register(t7);
+// Texture array.
+Texture2DArray<float4> g_TextureArray : register(t6);
 
 // Hit data.
 struct HitData 
@@ -222,12 +223,19 @@ void CS_main(uint3 threadID : SV_DispatchThreadID)
                 }
                 else
                 {   // Triangle.
-                    int entityID = GetEntityID(hitData.vertexOffset);
+                    //int entityID = GetEntityID(hitData.vertexOffset);
                     // Interpolate vertex.
                     Vertex vertex = Interpolate(hitPoint, g_VertexBuffer[hitData.vertexOffset], g_VertexBuffer[hitData.vertexOffset + 1], g_VertexBuffer[hitData.vertexOffset + 2]);
                     position = vertex.pos;
-                    normal = CalculateNormal(vertex.norm, vertex.tang, g_NormalTextureArray.SampleLevel(g_SampAni, float3(vertex.uv, entityID), 0).xyz);
-                    diffuse = g_DiffuseTextureArray.SampleLevel(g_SampAni, float3(vertex.uv, entityID), 0).xyz;
+                    if (vertex.normTexID >= 0)
+                        normal = CalculateNormal(vertex.norm, vertex.tang, g_TextureArray.SampleLevel(g_SampAni, float3(vertex.uv, vertex.normTexID), 0).xyz);
+                    else
+                        normal = vertex.norm;
+
+                    if (vertex.diffTexID >= 0)
+                        diffuse = g_TextureArray.SampleLevel(g_SampAni, float3(vertex.uv, vertex.diffTexID), 0).xyz;
+                    else
+                        diffuse = float3(1.f, 0.f, 0.f);
                 }
 
                 // Get point color.
@@ -237,9 +245,6 @@ void CS_main(uint3 threadID : SV_DispatchThreadID)
                 // Bounce ray.
                 rayDirection = reflect(rayDirection, normal);
                 rayOrigin = hitPoint + rayDirection * 0.01f;
-
-                // TMP.
-                //finalColor = normal;
             }
         }
     }
@@ -380,6 +385,8 @@ Vertex Interpolate(float3 hitPoint, Vertex v0, Vertex v1, Vertex v2)
     vertex.norm = v0.norm * a0 + v1.norm * a1 + v2.norm * a2;
     vertex.tang = v0.tang * a0 + v1.tang * a1 + v2.tang * a2;
     vertex.uv = v0.uv * a0 + v1.uv * a1 + v2.uv * a2;
+    vertex.diffTexID = v0.diffTexID;
+    vertex.normTexID = v0.normTexID;
 
     return vertex;
 }

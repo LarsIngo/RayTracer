@@ -3,8 +3,8 @@
 #include "DirectionalLight.h"
 #include "Entity.h"
 #include "Model.h"
-#include "Sphere.h"
 #include "PointLight.h"
+#include "Sphere.h"
 
 Scene::Scene() 
 {
@@ -75,4 +75,14 @@ std::vector<DirectionalLight*>* Scene::GetDirectionalLights()
 std::vector<Sphere*>* Scene::GetSpheres()
 {
     return &mSpheres;
+}
+
+std::size_t Scene::AddTexture(std::wstring path)
+{
+    const auto& it = mTextureIDMap.find(path);
+    if (it != mTextureIDMap.end())
+        return it->second;
+    std::size_t index = mTextureIDMap.size();
+    mTextureIDMap[path] = index;
+    return index;
 }

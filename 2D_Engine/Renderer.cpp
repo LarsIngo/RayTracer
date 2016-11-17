@@ -14,8 +14,6 @@ Renderer::~Renderer()
     mDeviceContext->Release();
     mSwapChain->Release();
     mBackBufferUAV->Release();
-    for (auto& it : mTextureMap)
-        delete it.second;
 }
 
 bool Renderer::Running() const 
@@ -39,16 +37,6 @@ bool Renderer::Running() const
     return false;
 }
 
-Texture* Renderer::CreateTexture(std::wstring path)
-{
-    const auto& it = mTextureMap.find(path);
-    if (it != mTextureMap.end())
-        return it->second;
-    Texture* texture = new Texture(&mDevice, &mDeviceContext);
-    texture->Load(path);
-    mTextureMap[path] = texture;
-    return texture;
-}
 
 bool Renderer::GetKeyPressed(int vKey)
 {

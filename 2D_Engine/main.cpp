@@ -32,8 +32,8 @@ int main()
     Entity* sceneBox = scene.CreateEntity();
     sceneBox->mScale *= 20.f;
     sceneBox->mModel.Load("assets/OBJSceneBox.obj");
-    sceneBox->mDiffuseTexPath = L"assets/DiffuseBrick.png";
-    sceneBox->mNormalTexPath = L"assets/NormalBrick.png";
+    sceneBox->mDiffuseTextureID = scene.AddTexture(L"assets/DiffuseBrick.png");
+    //sceneBox->mNormalTextureID = scene.AddTexture(L"assets/NormalBrick.png");
 
     // Point lights.
     std::vector<PointLight*> pointLights;
@@ -57,10 +57,10 @@ int main()
 
     // Directional lights.
     {
-        //DirectionalLight* directionalLight;
-        //directionalLight = scene.CreateDirectionalLight();
-        //directionalLight->dir = glm::normalize(glm::vec3(1.f, -2.f, 3.f));
-        //directionalLight->col = glm::vec3(1.f, 1.f, 1.f);
+        DirectionalLight* directionalLight;
+        directionalLight = scene.CreateDirectionalLight();
+        directionalLight->dir = glm::normalize(glm::vec3(1.f, -2.f, 3.f));
+        directionalLight->col = glm::vec3(1.f, 1.f, 1.f);
     }
 
     // Spheres.
@@ -71,7 +71,6 @@ int main()
         sphere->radius = 1.f;
     }
 
-
     // Entities.
     Entity* model0 = scene.CreateEntity();
     Entity* model1 = scene.CreateEntity();
@@ -79,10 +78,10 @@ int main()
     model1->mPosition = glm::vec3(-1.3f, -1.f, 0.f);
     model0->mModel.Load("assets/FBXModel.fbx");
     model1->mModel.Load("assets/OBJModel.obj");
-    model0->mDiffuseTexPath = L"assets/DiffuseBrick.png";
-    model1->mDiffuseTexPath = L"assets/DiffuseBrick.png";
-    model0->mNormalTexPath = L"assets/DefaultNormal.png";
-    model1->mNormalTexPath = L"assets/NormalBrick.png";
+    model0->mDiffuseTextureID = scene.AddTexture(L"assets/DiffuseBrick.png");
+    model1->mDiffuseTextureID = scene.AddTexture(L"assets/DiffuseBrick.png");
+    model0->mNormalTextureID = scene.AddTexture(L"assets/DefaultNormal.png");
+    model1->mNormalTextureID = scene.AddTexture(L"assets/NormalBrick.png");
 
     // Create application.
     RayTracer rayTracer(640, 640, &scene);

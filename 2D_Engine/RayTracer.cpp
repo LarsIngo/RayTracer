@@ -31,30 +31,16 @@ RayTracer::RayTracer(unsigned int width, unsigned int height, Scene* scene)
     mShader->CreateCPUwriteGPUreadStructuredBuffer<EntityEntry>(mMaxNumOfEntities, &mEntityEntryBuffer);
     mShader->CreateCPUwriteGPUreadStructuredBuffer<MetaData>(1, &mMetaBuffer);
 
-    // Texture arrays.
-    ID3D11ShaderResourceView* diffuseTexArrayBuffer;
-    {   // Diffuse textures.
+    // Texture array buffer.
+    ID3D11ShaderResourceView* textureArrayBuffer;
+    {
         std::vector<Texture*> textures;
-        textures.resize(scene->mEntites.size());
-        for (std::size_t i = 0; i < textures.size(); ++i)
-        {
-            Texture* tex = textures[i] = new Texture(&mRenderer->mDevice, &mRenderer->mDeviceContext);
-            tex->Load(scene->mEntites[i]->mDiffuseTexPath);
+        textures.resize(scene->mTextureIDMap.size());
+        for (auto& it : scene->mTextureIDMap) {
+            Texture* tex = textures[it.second] = new Texture(&mRenderer->mDevice, &mRenderer->mDeviceContext);
+            tex->Load(it.first);
         }
-        CreateTexture2DArray(textures, &diffuseTexArrayBuffer);
-        for (Texture* tex : textures)
-            delete tex;
-    }
-    ID3D11ShaderResourceView* normalTexArrayBuffer;
-    {   // Diffuse textures.
-        std::vector<Texture*> textures;
-        textures.resize(scene->mEntites.size());
-        for (std::size_t i = 0; i < textures.size(); ++i)
-        {
-            Texture* tex = textures[i] = new Texture(&mRenderer->mDevice, &mRenderer->mDeviceContext);
-            tex->Load(scene->mEntites[i]->mNormalTexPath);
-        }
-        CreateTexture2DArray(textures, &normalTexArrayBuffer);
+        CreateTexture2DArray(textures, &textureArrayBuffer);
         for (Texture* tex : textures)
             delete tex;
     }
@@ -66,12 +52,10 @@ RayTracer::RayTracer(unsigned int width, unsigned int height, Scene* scene)
     mSRVs.push_back(mSphereBuffer);
     mSRVs.push_back(mEntityEntryBuffer);
     mSRVs.push_back(mMetaBuffer);
-    mSRVs.push_back(diffuseTexArrayBuffer);
-    mSRVs.push_back(normalTexArrayBuffer);
+    mSRVs.push_back(textureArrayBuffer);
     mShader->BindCS("RayTracer", &mRenderer->mBackBufferUAV, 1, mSRVs.data(), mSRVs.size(), mConstBuffer);
 
-    diffuseTexArrayBuffer->Release();
-    normalTexArrayBuffer->Release();
+    textureArrayBuffer->Release();
 }
 
 RayTracer::~RayTracer() 
@@ -118,6 +102,8 @@ void RayTracer::Update(Scene& scene)
                 vertex.norm = glm::normalize(glm::vec3(viewMatrix * glm::vec4(skinVertex.normal, 0.f)));
                 vertex.tang = glm::normalize(glm::vec3(viewMatrix * glm::vec4(skinVertex.tangent, 0.f)));
                 vertex.uv = skinVertex.textureCoordinate;
+                vertex.diffTexID = entity->mDiffuseTextureID;
+                vertex.normTexID = entity->mNormalTextureID;
             }
         }
     }

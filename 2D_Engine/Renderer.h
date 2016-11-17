@@ -8,6 +8,7 @@
 #include <glm/vec2.hpp>
 #include <map>
 #include <string>
+#include <vector>
 #include <Windows.h>
 
 class Texture;
@@ -29,10 +30,6 @@ class Renderer
 
         // Whether window is running of not.
         bool Running() const;
-
-        // Create texture.
-        // path Path to file.
-        Texture* CreateTexture(std::wstring path);
 
         // Get key status.
         // vKey Windows virtual key.
@@ -75,9 +72,6 @@ class Renderer
     private:
         // Initialise window, device and device context.
         void Initialise();
-
-        // Texture map.
-        std::map<std::wstring, Texture*> mTextureMap;
 
         // Mouse position.
         glm::vec2 mMousePosition;

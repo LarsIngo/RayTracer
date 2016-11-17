@@ -13,28 +13,12 @@ struct Vertex
     glm::vec3 tang;
     // UV.
     glm::vec2 uv;
-    float pad;
+    // Diffuse texture ID.
+    int diffTexID;
+    // Normal texture ID.
+    int normTexID;
+    float pad[3];
 
     // Constructor.
-    Vertex();
-
-    // Constructor.
-    // pos Vertex position.
-    // norm Vertex normal.
-    // tang Vertex tangent.
-    // uv Vertex uv.
-    Vertex(const glm::vec3& pos, const glm::vec3& norm, const glm::vec3& tang, const glm::vec2& uv);
+    Vertex() { };
 };
-
-inline Vertex::Vertex() 
-{
-
-}
-
-inline Vertex::Vertex(const glm::vec3& pos, const glm::vec3& norm, const glm::vec3& tang, const glm::vec2& uv)
-{
-    this->pos = pos;
-    this->norm = norm;
-    this->tang = tang;
-    this->uv = uv;
-}

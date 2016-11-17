@@ -5,10 +5,10 @@
 #include <string>
 #include <vector>
 
-struct DirectionalLight;
 class Entity;
-struct Sphere;
+struct DirectionalLight;
 struct PointLight;
+struct Sphere;
 
 // A Scene.
 class Scene 
@@ -58,6 +58,11 @@ class Scene
         // Returns a vector of spheres.
         std::vector<Sphere*>* GetSpheres();
 
+        // Add texture.
+        // path Path to file.
+        // Return texture index.
+        std::size_t AddTexture(std::wstring path);
+
     private:
         // Camera.
         Camera mCamera;
@@ -73,4 +78,7 @@ class Scene
 
         // Spheres.
         std::vector<Sphere*> mSpheres;
+
+        // Texture id map.
+        std::map<std::wstring, std::size_t> mTextureIDMap;
 };
