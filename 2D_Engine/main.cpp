@@ -2,12 +2,15 @@
 
 #define _CRTDBG_MAP_ALLOC
 #include <stdlib.h>
+#include <chrono>
 #include <crtdbg.h>
 #include <iostream>
 #include <glm/glm.hpp>
 #include "DirectionalLight.h"
+#include "DxAssert.h"
 #include "Entity.h"
 #include "PointLight.h"
+#include "Profiler.h"
 #include "RayTracer.h"
 #include "Renderer.h"
 #include "Scene.h"
@@ -18,9 +21,10 @@ glm::vec3 WASDQEinput(float speed, const glm::vec3& front, const glm::vec3& up, 
 glm::vec2 Arrowinput(float speed);
 float ZXinput(float speed);
 
+using namespace std::chrono;
+
 int main() 
 {
-
     _CrtSetDbgFlag(_CRTDBG_ALLOC_MEM_DF | _CRTDBG_LEAK_CHECK_DF);
 
     // Create scene.
@@ -57,10 +61,10 @@ int main()
 
     // Directional lights.
     {
-        DirectionalLight* directionalLight;
-        directionalLight = scene.CreateDirectionalLight();
-        directionalLight->dir = glm::normalize(glm::vec3(1.f, -2.f, 3.f));
-        directionalLight->col = glm::vec3(1.f, 1.f, 1.f);
+        //DirectionalLight* directionalLight;
+        //directionalLight = scene.CreateDirectionalLight();
+        //directionalLight->dir = glm::normalize(glm::vec3(1.f, -2.f, 3.f));
+        //directionalLight->col = glm::vec3(1.f, 1.f, 1.f);
     }
 
     // Spheres.
@@ -87,9 +91,20 @@ int main()
     RayTracer rayTracer(640, 640, &scene);
     Renderer* renderer = rayTracer.mRenderer;
 
-    float dt = 0.1f;
+    // Set Frame Latency.
+    IDXGIDevice1 * pDXGIDevice;
+    DxAssert(renderer->mDevice->QueryInterface(__uuidof(IDXGIDevice), (void **)&pDXGIDevice), S_OK);
+    DxAssert(pDXGIDevice->SetMaximumFrameLatency(1), S_OK);
+    pDXGIDevice->Release();
+
+    long long lastTime = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+    float dt = 0.f;
+    float duration = 0.f;
     while (rayTracer.Running()) {
-        dt += 0.1f;
+        long long newTime = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
+        duration += dt = static_cast<float>(newTime - lastTime)/1000.f;
+        lastTime = newTime;
+
         // Input.
         float speed = 0.1f;
         glm::vec2 arrowinput = Arrowinput(speed);
@@ -105,20 +120,23 @@ int main()
             std::cout << "Num Bounces: " << rayTracer.mNumBounces << std::endl;
         }
             
-        // Update.
         // Camera.
         cam->Update(0.1f, 1.f, renderer);
-        // Point lights.
-        for (PointLight* pointLight : pointLights) {
-            pointLight->pos += glm::vec3(arrowinput.x, 0.f, arrowinput.y);
-        }
-        // Models.
-        model0->mModel.skeleton.Animate(&model0->mModel.animations[0], dt);
-        model0->mModel.TransformMeshCPU();
-        rayTracer.Update(scene);
 
-        // Render.
-        rayTracer.Render(scene);
+        // Point lights.
+        for (PointLight* pointLight : pointLights)
+            pointLight->pos += glm::vec3(arrowinput.x, 0.f, arrowinput.y);
+
+        // Models.
+        model0->mModel.skeleton.Animate(&model0->mModel.animations[0], duration);
+        model0->mModel.TransformMeshCPU();
+        
+
+
+        { PROFILE("GPU");
+            rayTracer.Update(scene);
+            rayTracer.Render(scene);
+        }
     }
 
     return 0;
