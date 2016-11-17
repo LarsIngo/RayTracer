@@ -119,6 +119,18 @@ int main()
             ++rayTracer.mNumBounces;
             std::cout << "Num Bounces: " << rayTracer.mNumBounces << std::endl;
         }
+
+        if (GetAsyncKeyState(VK_F3) && rayTracer.mSSAA > 1)
+        {
+            rayTracer.mSSAA /= 2;
+            std::cout << "SSAA: " << rayTracer.mSSAA << std::endl;
+        }
+
+        if (GetAsyncKeyState(VK_F4) && rayTracer.mSSAA < 8)
+        {
+            rayTracer.mSSAA *= 2;
+            std::cout << "SSAA: " << rayTracer.mSSAA << std::endl;
+        }
             
         // Camera.
         cam->Update(0.1f, 1.f, renderer);
