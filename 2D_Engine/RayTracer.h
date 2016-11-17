@@ -64,6 +64,11 @@ class RayTracer
         Renderer* mRenderer = nullptr;
 
     private:
+        // Create texture array.
+        // textures Vector of textures.
+        // texture2DArrayBuffer Texture 2D array buffer.
+        void CreateTexture2DArray(std::vector<Texture*>& textures, ID3D11ShaderResourceView** texture2DArrayBuffer);
+
         // Compute shader helper class. 
         Shader* mShader = nullptr;
 

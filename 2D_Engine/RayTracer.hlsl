@@ -6,6 +6,7 @@ SamplerState g_SampAni : register(s0);
 // Render target.
 RWTexture2D<float4> g_Target : register(u0);
 
+// Constant buffer.
 cbuffer CONST_BUFFER : register(b0)
 {
     // Frame width in pixels.
@@ -22,8 +23,11 @@ struct Vertex
     float3 pos;
     // Normal.
     float3 norm;
+    // Tangent.
+    float3 tang;
     // Uv.
     float2 uv;
+    float pad;
 };
 // Vertex buffer.
 StructuredBuffer<Vertex> g_VertexBuffer : register(t0);
@@ -103,6 +107,9 @@ StructuredBuffer<MetaData> g_MetaBuffer : register(t5);
 // Diffuse texture array.
 Texture2DArray<float4> g_DiffuseTextureArray : register(t6);
 
+// Normal texture array.
+Texture2DArray<float4> g_NormalTextureArray : register(t7);
+
 // Hit data.
 struct HitData 
 {
@@ -126,7 +133,7 @@ HitData RayVsScene(float3 rayOrigin, float3 rayDirection);
 // rayOrigin Origin of ray.
 // rayDirection Direction of ray.
 // v0, v1, v2 Vertex positions.
-// Returns scalar to closest hit point.
+// Return scalar to closest hit point.
 float RayVsTriangle(float3 rayOrigin, float3 rayDirection, float3 v0, float3 v1, float3 v2);
 
 // Intersect ray vs sphere.
@@ -134,26 +141,33 @@ float RayVsTriangle(float3 rayOrigin, float3 rayDirection, float3 v0, float3 v1,
 // rayDirection Direction of ray.
 // position Position of sphere.
 // radius Radius of sphere.
-// Returns scalar to closest hit point.
+// Return scalar to closest hit point.
 float RayVsSphere(float3 rayOrigin, float3 rayDirection, float3 position, float radius);
 
 // Interpolates vertex values.
 // hitPoint Point of intersection.
 // v0, v1, v2 Vertex points to interpolate.
-// Returns interpolated vertex.
+// Return interpolated vertex.
 Vertex Interpolate(float3 hitPoint, Vertex v0, Vertex v1, Vertex v2);
 
 // Calculate color for vertex.
 // hitPoint Point of intersection.
 // vertex Interpolated vertex.
 // entityID Index of which entity vertex corresponds.
-// Returns color.
+// Return color.
 float3 CalculateColor(float3 rayDirecetion, float3 hitPoint, float3 position, float3 normal, float3 diffuse);
 
 // Get id of which entity this vertex belongs to.
 // vertexIndex Index of vertex.
 // Return id.
 int GetEntityID(int vertexIndex);
+
+// Calculate normal for vertex with normal map.
+// normal Normal from interpolated vertex.
+// tangent Tangent from interpolated vertex.
+// normalMap Sample from normal map.
+// Return normal.
+float3 CalculateNormal(float3 normal, float3 tangent, float3 normalMap);
 
 // One thread for each pixel in screen.
 [numthreads(32, 32, 1)]
@@ -198,6 +212,7 @@ void CS_main(uint3 threadID : SV_DispatchThreadID)
                 float3 position;
                 float3 normal;
                 float3 diffuse;
+
                 if (hitData.sphere)
                 {   // Sphere.
                     Sphere sphere = g_SphereBuffer[hitData.sphereID];
@@ -211,7 +226,7 @@ void CS_main(uint3 threadID : SV_DispatchThreadID)
                     // Interpolate vertex.
                     Vertex vertex = Interpolate(hitPoint, g_VertexBuffer[hitData.vertexOffset], g_VertexBuffer[hitData.vertexOffset + 1], g_VertexBuffer[hitData.vertexOffset + 2]);
                     position = vertex.pos;
-                    normal = vertex.norm;
+                    normal = CalculateNormal(vertex.norm, vertex.tang, g_NormalTextureArray.SampleLevel(g_SampAni, float3(vertex.uv, entityID), 0).xyz);
                     diffuse = g_DiffuseTextureArray.SampleLevel(g_SampAni, float3(vertex.uv, entityID), 0).xyz;
                 }
 
@@ -222,6 +237,9 @@ void CS_main(uint3 threadID : SV_DispatchThreadID)
                 // Bounce ray.
                 rayDirection = reflect(rayDirection, normal);
                 rayOrigin = hitPoint + rayDirection * 0.01f;
+
+                // TMP.
+                //finalColor = normal;
             }
         }
     }
@@ -233,7 +251,7 @@ void CS_main(uint3 threadID : SV_DispatchThreadID)
     //const float gamma = 2.2f;
     //finalColor = pow(finalColor, 1.f / gamma);
 
-    // Tone map.
+    // Tone map. Sets finalColor in range [0, 1)
     finalColor = finalColor / (finalColor + float3(1.f, 1.f, 1.f));
 
     // Set pixel color.
@@ -360,6 +378,7 @@ Vertex Interpolate(float3 hitPoint, Vertex v0, Vertex v1, Vertex v2)
     Vertex vertex;
     vertex.pos = v0.pos * a0 + v1.pos * a1 + v2.pos * a2;
     vertex.norm = v0.norm * a0 + v1.norm * a1 + v2.norm * a2;
+    vertex.tang = v0.tang * a0 + v1.tang * a1 + v2.tang * a2;
     vertex.uv = v0.uv * a0 + v1.uv * a1 + v2.uv * a2;
 
     return vertex;
@@ -433,4 +452,19 @@ int GetEntityID(int vertexIndex)
             return i;
     }
     return -1;
+}
+
+float3 CalculateNormal(float3 normal, float3 tangent, float3 normalMap)
+{
+    float3 n = normalize(normal);
+    float3 t = normalize(tangent);
+    t = normalize(t - dot(t, n) * n);
+    float3 b = cross(n, t);
+    if (dot(cross(n, t), b) < 0.f)
+        t = -t;
+
+    float3 mn = normalize(2.f * normalMap - float3(1.f, 1.f, 1.f));
+    float3x3 TBN = float3x3(t, b, n);
+
+    return mul(TBN, mn);
 }

@@ -29,7 +29,9 @@ class Entity
         // Model.
         Model mModel;
 
-        // Textures.
         // Diffuse path.
         std::wstring mDiffuseTexPath = L"None";
+
+        // Normal path.
+        std::wstring mNormalTexPath = L"None";
 };

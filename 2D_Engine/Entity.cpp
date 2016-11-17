@@ -9,7 +9,11 @@ Entity::Entity()
 
 Entity::~Entity() 
 {
+    mDiffuseTexPath.clear();
+    mDiffuseTexPath.shrink_to_fit();
 
+    mNormalTexPath.clear();
+    mNormalTexPath.shrink_to_fit();
 }
 
 glm::mat4 Entity::CalculateModelMatrix() const

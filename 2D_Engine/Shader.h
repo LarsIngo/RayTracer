@@ -85,7 +85,7 @@ class Shader {
         // height Texture height in pixels.
         // texturesResources Vector of textures resources.
         // buffer Texture 2D array buffer.
-        void CreateTexture2DArray(DXGI_FORMAT format, int width, int height, int mipLevels, std::vector<ID3D11Resource*> texturesResources, ID3D11ShaderResourceView** buffer);
+        void CreateTexture2DArray(DXGI_FORMAT format, int width, int height, int mipLevels, std::vector<ID3D11Resource*>& texturesResources, ID3D11ShaderResourceView** buffer);
 
         // Creates texture 2D.
         // format Texture format.

@@ -31,22 +31,33 @@ RayTracer::RayTracer(unsigned int width, unsigned int height, Scene* scene)
     mShader->CreateCPUwriteGPUreadStructuredBuffer<EntityEntry>(mMaxNumOfEntities, &mEntityEntryBuffer);
     mShader->CreateCPUwriteGPUreadStructuredBuffer<MetaData>(1, &mMetaBuffer);
 
-    // Texture array.
-    ID3D11ShaderResourceView* diffuseTexArray64x64Buffer;
-    std::vector<ID3D11Resource*> texturesResources;
-    std::vector<Texture*> textures;
-    texturesResources.resize(scene->mEntites.size());
-    textures.resize(scene->mEntites.size());
-    for (std::size_t i = 0; i < texturesResources.size(); ++i)
-    {
-        Texture* tex = textures[i] = new Texture(&mRenderer->mDevice, &mRenderer->mDeviceContext);
-        tex->Load(scene->mEntites[i]->mDiffuseTexPath);
-        assert(tex->mFormat == DXGI_FORMAT_R8G8B8A8_UNORM);
-        assert(tex->mWidth == 64 && tex->mHeight == 64);
-        assert(tex->mMIpLevels == 1);
-        texturesResources[i] = tex->mRes;
+    // Texture arrays.
+    ID3D11ShaderResourceView* diffuseTexArrayBuffer;
+    {   // Diffuse textures.
+        std::vector<Texture*> textures;
+        textures.resize(scene->mEntites.size());
+        for (std::size_t i = 0; i < textures.size(); ++i)
+        {
+            Texture* tex = textures[i] = new Texture(&mRenderer->mDevice, &mRenderer->mDeviceContext);
+            tex->Load(scene->mEntites[i]->mDiffuseTexPath);
+        }
+        CreateTexture2DArray(textures, &diffuseTexArrayBuffer);
+        for (Texture* tex : textures)
+            delete tex;
     }
-    mShader->CreateTexture2DArray(DXGI_FORMAT_R8G8B8A8_UNORM, 64, 64, 1, texturesResources, &diffuseTexArray64x64Buffer);
+    ID3D11ShaderResourceView* normalTexArrayBuffer;
+    {   // Diffuse textures.
+        std::vector<Texture*> textures;
+        textures.resize(scene->mEntites.size());
+        for (std::size_t i = 0; i < textures.size(); ++i)
+        {
+            Texture* tex = textures[i] = new Texture(&mRenderer->mDevice, &mRenderer->mDeviceContext);
+            tex->Load(scene->mEntites[i]->mNormalTexPath);
+        }
+        CreateTexture2DArray(textures, &normalTexArrayBuffer);
+        for (Texture* tex : textures)
+            delete tex;
+    }
 
     // Bind.
     mSRVs.push_back(mVertexBuffer);
@@ -55,12 +66,12 @@ RayTracer::RayTracer(unsigned int width, unsigned int height, Scene* scene)
     mSRVs.push_back(mSphereBuffer);
     mSRVs.push_back(mEntityEntryBuffer);
     mSRVs.push_back(mMetaBuffer);
-    mSRVs.push_back(diffuseTexArray64x64Buffer);
+    mSRVs.push_back(diffuseTexArrayBuffer);
+    mSRVs.push_back(normalTexArrayBuffer);
     mShader->BindCS("RayTracer", &mRenderer->mBackBufferUAV, 1, mSRVs.data(), mSRVs.size(), mConstBuffer);
 
-    diffuseTexArray64x64Buffer->Release();
-    for (Texture* tex : textures)
-        delete tex;
+    diffuseTexArrayBuffer->Release();
+    normalTexArrayBuffer->Release();
 }
 
 RayTracer::~RayTracer() 
@@ -104,7 +115,8 @@ void RayTracer::Update(Scene& scene)
                 const Geometry::SkinVertex& skinVertex = model.mVertices[index];
                 Vertex& vertex = mVertices[i + offset];
                 vertex.pos = glm::vec3(viewMatrix * (modelMatrix * glm::vec4(skinVertex.position, 1.f)));
-                vertex.norm = glm::normalize(glm::vec3(viewMatrix * (modelMatrix * glm::vec4(skinVertex.normal, 0.f))));
+                vertex.norm = glm::normalize(glm::vec3(viewMatrix * glm::vec4(skinVertex.normal, 0.f)));
+                vertex.tang = glm::normalize(glm::vec3(viewMatrix * glm::vec4(skinVertex.tangent, 0.f)));
                 vertex.uv = skinVertex.textureCoordinate;
             }
         }
@@ -155,6 +167,21 @@ void RayTracer::Render(Scene& scene)
 
     // Present to window.
     mRenderer->mSwapChain->Present(0,0);
+}
+
+void RayTracer::CreateTexture2DArray(std::vector<Texture*>& textures, ID3D11ShaderResourceView** texture2DArrayBuffer)
+{
+    std::vector<ID3D11Resource*> resources;
+    resources.resize(textures.size());
+    for (std::size_t i = 0; i < resources.size(); ++i)
+    {
+        Texture* tex = textures[i];
+        assert(tex->mFormat == DXGI_FORMAT_B8G8R8A8_UNORM); //DXGI_FORMAT_R8G8B8A8_UNORM
+        assert(tex->mWidth == 1024 && tex->mHeight == 1024);
+        assert(tex->mMIpLevels == 1);
+        resources[i] = tex->mRes;
+    }
+    mShader->CreateTexture2DArray(DXGI_FORMAT_B8G8R8A8_UNORM, 1024, 1024, 1, resources, texture2DArrayBuffer);
 }
 
 RayTracer::MetaData::MetaData(int numVertices, int numPointLights, int numDirectionalLights, int numSpheres, int numBounces, int numEntities, int ssaa)

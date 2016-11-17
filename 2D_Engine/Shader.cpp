@@ -15,7 +15,7 @@ Shader::~Shader() {
     mSampleState->Release();
 }
 
-void Shader::CreateTexture2DArray(DXGI_FORMAT format, int width, int height, int mipLevels, std::vector<ID3D11Resource*> texturesResources, ID3D11ShaderResourceView** buffer)
+void Shader::CreateTexture2DArray(DXGI_FORMAT format, int width, int height, int mipLevels, std::vector<ID3D11Resource*>& texturesResources, ID3D11ShaderResourceView** buffer)
 {
     // http://www.gamedev.net/topic/636900-how-to-create-a-texture2darray-from-files-in-dx11/
 

@@ -182,6 +182,7 @@ void Model::MeshTransform(const std::vector<glm::mat4>& bones, const std::vector
 
         glm::vec3 vertexPosition = mVerticesBindPose[v].position;
         glm::vec3 vertexNormal = mVerticesBindPose[v].normal;
+        glm::vec3 vertexTangent = mVerticesBindPose[v].tangent;
 
         //assert(abs(1.f - vertexWeights[0] + vertexWeights[1] + vertexWeights[2] + vertexWeights[3]) < 0.01f); // Assert weights sum equals 1.
 
@@ -195,7 +196,13 @@ void Model::MeshTransform(const std::vector<glm::mat4>& bones, const std::vector
         normal += (bonesIT[vertexBoneIDs[2]] * vertexNormal) * vertexWeights[2];
         normal += (bonesIT[vertexBoneIDs[3]] * vertexNormal) * vertexWeights[3];
 
+        glm::vec3 tangent = (bonesIT[vertexBoneIDs[0]] * vertexTangent) * vertexWeights[0];
+        tangent += (bonesIT[vertexBoneIDs[1]] * vertexTangent) * vertexWeights[1];
+        tangent += (bonesIT[vertexBoneIDs[2]] * vertexTangent) * vertexWeights[2];
+        tangent += (bonesIT[vertexBoneIDs[3]] * vertexTangent) * vertexWeights[3];
+
         mVertices[v].position = position;
         mVertices[v].normal = normal;
+        mVertices[v].tangent = tangent;
     }
 }
