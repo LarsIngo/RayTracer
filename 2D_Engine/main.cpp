@@ -17,7 +17,6 @@
 #include "Sphere.h"
 #include "Texture.h"
 
-glm::vec3 WASDQEinput(float speed, const glm::vec3& front, const glm::vec3& up, const glm::vec3& right);
 glm::vec2 Arrowinput(float speed);
 float ZXinput(float speed);
 
@@ -35,9 +34,9 @@ int main()
     // Scene box.
     Entity* sceneBox = scene.CreateEntity();
     sceneBox->mScale *= 20.f;
-    sceneBox->mModel.Load("assets/OBJSceneBox.obj");
-    //sceneBox->mDiffuseTextureID = scene.AddTexture(L"assets/DiffuseBrick.png");
-    //sceneBox->mNormalTextureID = scene.AddTexture(L"assets/NormalBrick.png");
+    sceneBox->mModel.Load("assets/INVBOX.obj");
+    sceneBox->mDiffuseTextureID = scene.AddTexture(L"assets/DiffuseBrick.png");
+    sceneBox->mNormalTextureID = scene.AddTexture(L"assets/NormalBrick.png");
 
     // Point lights.
     std::vector<PointLight*> pointLights;
@@ -106,33 +105,44 @@ int main()
 
     // Spheres.
     {
-        Sphere* sphere = scene.CreateSphere();
+        Sphere* sphere;
+        sphere = scene.CreateSphere();
         sphere->pos = glm::vec3(0.f, 0.f, 3.f);
+        sphere->col = glm::vec3(0.f, 0.f, 1.f);
+        sphere->radius = 1.f;
+
+        sphere = scene.CreateSphere();
+        sphere->pos = glm::vec3(5.f, 0.f, 0.f);
+        sphere->col = glm::vec3(0.f, 0.f, 1.f);
+        sphere->radius = 1.f;
+
+        sphere = scene.CreateSphere();
+        sphere->pos = glm::vec3(-5.f, 0.f, -3.f);
         sphere->col = glm::vec3(0.f, 0.f, 1.f);
         sphere->radius = 1.f;
     }
 
     // Entities.
-    Entity* model0 = scene.CreateEntity();
-    Entity* model1 = scene.CreateEntity();
-    model0->mPosition = glm::vec3(1.3f, -1.f, 0.f);
-    model1->mPosition = glm::vec3(-1.3f, -1.f, 0.f);
-    model0->mModel.Load("assets/FBXModel.fbx");
-    model1->mModel.Load("assets/OBJModel.obj");
-    model0->mDiffuseTextureID = scene.AddTexture(L"assets/DiffuseBrick.png");
-    model1->mDiffuseTextureID = scene.AddTexture(L"assets/DiffuseBrick.png");
-    model0->mNormalTextureID = scene.AddTexture(L"assets/DefaultNormal.png");
-    model1->mNormalTextureID = scene.AddTexture(L"assets/NormalBrick.png");
+    //Entity* model0 = scene.CreateEntity();
+    //Entity* model1 = scene.CreateEntity();
+    //model0->mPosition = glm::vec3(1.3f, -1.f, 0.f);
+    //model1->mPosition = glm::vec3(-1.3f, -1.f, 0.f);
+    //model0->mModel.Load("assets/FBXModel.fbx");
+    //model1->mModel.Load("assets/OBJModel.obj");
+    //model0->mDiffuseTextureID = scene.AddTexture(L"assets/DiffuseBrick.png");
+    //model1->mDiffuseTextureID = scene.AddTexture(L"assets/DiffuseBrick.png");
+    //model0->mNormalTextureID = scene.AddTexture(L"assets/DefaultNormal.png");
+    //model1->mNormalTextureID = scene.AddTexture(L"assets/NormalBrick.png");
 
     // Create application.
-    RayTracer rayTracer(640, 640, &scene);
+    RayTracer rayTracer(1024, 1024, &scene);
     Renderer* renderer = rayTracer.mRenderer;
 
     // Set Frame Latency.
-    //IDXGIDevice1 * pDXGIDevice;
-    //DxAssert(renderer->mDevice->QueryInterface(__uuidof(IDXGIDevice), (void **)&pDXGIDevice), S_OK);
-    //DxAssert(pDXGIDevice->SetMaximumFrameLatency(1), S_OK);
-    //pDXGIDevice->Release();
+    IDXGIDevice1 * pDXGIDevice;
+    DxAssert(renderer->mDevice->QueryInterface(__uuidof(IDXGIDevice), (void **)&pDXGIDevice), S_OK);
+    DxAssert(pDXGIDevice->SetMaximumFrameLatency(1), S_OK);
+    pDXGIDevice->Release();
 
     long long lastTime = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
     float dt = 0.f;
@@ -171,38 +181,38 @@ int main()
 
         if (GetAsyncKeyState(VK_F5) && rayTracer.mFOV > 3.14f / 8.f )
         {
-            rayTracer.mFOV -= 0.1f;
+            rayTracer.mFOV -= 0.5f * dt;
             std::cout << "FOV: " << rayTracer.mFOV << std::endl;
         }
 
         if (GetAsyncKeyState(VK_F6) && rayTracer.mFOV < 3.14f / 2.f)
         {
-            rayTracer.mFOV += 0.1f;
+            rayTracer.mFOV += 0.5f * dt;
             std::cout << "FOV: " << rayTracer.mFOV << std::endl;
         }
 
         if (GetAsyncKeyState(VK_F7) && rayTracer.mEnergyCoefficient > 0.f)
         {
-            rayTracer.mEnergyCoefficient -= 0.05f;
+            rayTracer.mEnergyCoefficient -= 0.8f * dt;
             std::cout << "Energy coefficient: " << rayTracer.mEnergyCoefficient << std::endl;
         }
 
         if (GetAsyncKeyState(VK_F8) && rayTracer.mEnergyCoefficient < 1.f)
         {
-            rayTracer.mEnergyCoefficient += 0.05f;
+            rayTracer.mEnergyCoefficient += 0.8f * dt;
             std::cout << "Energy coefficient: " << rayTracer.mEnergyCoefficient << std::endl;
         }
             
         // Camera.
-        cam->Update(0.1f, 1.f, renderer);
+        cam->Update(20.f, dt, renderer);
 
         // Point lights.
         for (PointLight* pointLight : pointLights)
-            pointLight->pos += glm::vec3(arrowinput.x, 0.f, arrowinput.y);
+            pointLight->pos += glm::vec3(arrowinput.x, 0.f, arrowinput.y) * dt * 20.f;
 
         // Models.
-        model0->mModel.skeleton.Animate(&model0->mModel.animations[0], duration);
-        model0->mModel.TransformMeshCPU();
+        //model0->mModel.skeleton.Animate(&model0->mModel.animations[0], duration);
+        //model0->mModel.TransformMeshCPU();
         
 
 
@@ -216,40 +226,6 @@ int main()
 
 }
 
-glm::vec3 WASDQEinput(float speed, const glm::vec3& front, const glm::vec3& up, const glm::vec3& right) {
-
-    glm::vec3 input(0.f, 0.f, 0.f);
-
-    if (GetAsyncKeyState('W'))
-    {
-        input += front;
-    }
-    if (GetAsyncKeyState('A'))
-    {
-        input -= right;
-    }
-    if (GetAsyncKeyState('S'))
-    {
-        input -= front;
-    }
-    if (GetAsyncKeyState('D'))
-    {
-        input += right;
-    }
-
-    if (GetAsyncKeyState('Q'))
-    {
-        input += up;
-    }
-
-    if (GetAsyncKeyState('E'))
-    {
-        input -= up;
-    }
-
-    return input * speed;
-
-}
 
 glm::vec2 Arrowinput(float speed) {
 

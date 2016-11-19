@@ -81,11 +81,12 @@ void Camera::Update(float speed, float dt, Renderer* renderer)
 
     // Update postion & rotation.
     mPosition += movement * speed * dt;
+    rotation *= speed / 2.f * dt;
 
     // Update direction vectors and matrices.
-    Roll(rotation.z * speed * dt);
-    Pitch(rotation.y * speed * dt);
-    Yaw(rotation.x * speed * dt);
+    Roll(rotation.z);
+    Pitch(rotation.y);
+    Yaw(rotation.x);
 
     mOrientationMatrix = CalculateOrientationMatrix();
     mViewMatrix = CalculateViewMatrix();

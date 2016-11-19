@@ -296,7 +296,7 @@ float RayVsTriangle(float3 rayOrigin, float3 rayDirection, float3 v0, float3 v1,
         float u = det * determinant(float3x3(d, s, e2));
         float v = det * determinant(float3x3(d, e1, s));
 
-        if ((u >= -0.001f && u <= 1.001f) && (v >= -0.001f && v <= (1.001f - u))) // TODO
+        if ((u >= -0.001f && u <= 1.001f) && (v >= -0.001f && v <= (1.001f - u)))
         {
             return det * determinant(float3x3(s, e1, e2));
         }
@@ -376,7 +376,7 @@ Vertex Interpolate(float3 hitPoint, Vertex v0, Vertex v1, Vertex v2)
     return vertex;
 }
 
-float3 CalculateColor(float3 rayDirection, float3 hitPoint, float3 position, float3 normal, float3 diffuse)
+float3 CalculateColor(float3 rayDirection, float3 hitPoint, float3 position, float3 normal, float3 diffuse, float3 globalIllumination)
 {
     float3 color = float3(0.f, 0.f, 0.f);
 
@@ -430,6 +430,9 @@ float3 CalculateColor(float3 rayDirection, float3 hitPoint, float3 position, flo
         color += directionalLight.col * specular + diffuse * diffuseFactor;
     }
 
+    // Global illumiation.
+    color += float3(0.1f, 0.1f, 0.1f) * diffuse * dot(reflect(rayDirection, normal), normal);
+
     return color;
 }
 
@@ -445,5 +448,5 @@ float3 CalculateNormal(float3 normal, float3 tangent, float3 normalMap)
     float3 mn = normalize(2.f * normalMap - float3(1.f, 1.f, 1.f));
     float3x3 TBN = float3x3(t, b, n);
 
-    return mul(TBN, mn);
+    return mul(mn, TBN);
 }

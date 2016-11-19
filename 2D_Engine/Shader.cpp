@@ -66,53 +66,6 @@ void Shader::CreateTexture2DArray(DXGI_FORMAT format, int width, int height, int
     DxAssert((*mpDevice)->CreateShaderResourceView(localTextureArray, &srvDesc, buffer), S_OK);
 
     localTextureArray->Release();
-
-    //// Create a continues array of textures.
-    //std::vector<ID3D11Texture2D*> textureArr;
-    //textureArr.resize(textures.size());
-    //for (std::size_t i = 0; i < textures.size(); ++i)
-    //{
-    //    (*mpDeviceContext)->CopyResource(textureArr[i], *textures[i]);
-    //}
-
-    //ID3D11Texture2D* localTextureArray;
-    //D3D11_TEXTURE2D_DESC texArrDesc;
-    //ZeroMemory(&texArrDesc, sizeof(D3D11_TEXTURE2D_DESC));
-    //texArrDesc.Format = format;
-    //texArrDesc.Width = width;
-    //texArrDesc.Height = height;
-    //texArrDesc.ArraySize = textures.size();
-    //texArrDesc.MipLevels = 1;
-    //texArrDesc.SampleDesc.Count = 1;
-    //texArrDesc.SampleDesc.Quality = 0;
-    //texArrDesc.Usage = D3D11_USAGE_IMMUTABLE;
-    //texArrDesc.BindFlags = D3D11_BIND_SHADER_RESOURCE;
-    //texArrDesc.CPUAccessFlags = 0;
-    //texArrDesc.MiscFlags = 0;
-
-    //D3D11_SUBRESOURCE_DATA* initData = new D3D11_SUBRESOURCE_DATA[textures.size()];
-    //for (std::size_t i = 0; i < textures.size(); ++i)
-    //{
-    //    ZeroMemory(&initData[i], sizeof(D3D11_SUBRESOURCE_DATA));
-    //    initData[i].pSysMem = textures.data();
-    //    initData[i].SysMemPitch = width * 4; //R8G8B8A8
-    //}
-
-    //DxAssert((*mpDevice)->CreateTexture2D(&texArrDesc, initData, &localTextureArray), S_OK);
-    //delete[] initData;
-
-    //D3D11_SHADER_RESOURCE_VIEW_DESC srvDesc;
-    //ZeroMemory(&srvDesc, sizeof(D3D11_SHADER_RESOURCE_VIEW_DESC));
-    //srvDesc.Format = format;
-    //srvDesc.ViewDimension = D3D11_SRV_DIMENSION_TEXTURE2DARRAY;
-    //srvDesc.Texture2DArray.ArraySize = textures.size();
-    //srvDesc.Texture2DArray.FirstArraySlice = 0;
-    //srvDesc.Texture2DArray.MipLevels = 1;
-    //srvDesc.Texture2DArray.MostDetailedMip = 0;
-
-    //DxAssert((*mpDevice)->CreateShaderResourceView(localTextureArray, &srvDesc, buffer), S_OK);
-
-    //localTextureArray->Release();
 }
 
 void Shader::CreateTexture2D(DXGI_FORMAT format, ID3D11Texture2D* texture, ID3D11ShaderResourceView** buffer)
