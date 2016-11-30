@@ -5,7 +5,7 @@
 #include <glm/gtc/matrix_transform.hpp>
 #include <vector>
 
-#include "DirectionalLight.h"
+#include "SpotLight.h"
 #include "Entity.h"
 #include "Renderer.h"
 #include "Scene.h"
@@ -25,7 +25,7 @@ RayTracer::RayTracer(unsigned int width, unsigned int height, Scene* scene)
     mShader->CreateConstantBuffer<ConstData>(&ConstData(width, height), &mConstBuffer);
     mShader->CreateCPUwriteGPUreadStructuredBuffer<Vertex>(mMaxNumVertices, &mVertexBuffer);
     mShader->CreateCPUwriteGPUreadStructuredBuffer<PointLight>(mMaxNumPointLights, &mPointLightBuffer);
-    mShader->CreateCPUwriteGPUreadStructuredBuffer<PointLight>(mMaxNumDirectionalLights, &mDirectionalLightBuffer);
+    mShader->CreateCPUwriteGPUreadStructuredBuffer<SpotLight>(mMaxNumSpotLights, &mSpotLightBuffer);
     mShader->CreateCPUwriteGPUreadStructuredBuffer<Sphere>(mMaxNumSpheres, &mSphereBuffer);
     mShader->CreateCPUwriteGPUreadStructuredBuffer<MetaData>(1, &mMetaBuffer);
 
@@ -46,7 +46,7 @@ RayTracer::RayTracer(unsigned int width, unsigned int height, Scene* scene)
     // Bind.
     mSRVs.push_back(mVertexBuffer);
     mSRVs.push_back(mPointLightBuffer);
-    mSRVs.push_back(mDirectionalLightBuffer);
+    mSRVs.push_back(mSpotLightBuffer);
     mSRVs.push_back(mSphereBuffer);
     mSRVs.push_back(mMetaBuffer);
     mSRVs.push_back(textureArrayBuffer);
@@ -60,7 +60,7 @@ RayTracer::~RayTracer()
     mShader->UnbindCS(1, mSRVs.size());
     mVertexBuffer->Release();
     mPointLightBuffer->Release();
-    mDirectionalLightBuffer->Release();
+    mSpotLightBuffer->Release();
     mSphereBuffer->Release();
     mMetaBuffer->Release();
     mConstBuffer->Release();
@@ -109,12 +109,13 @@ void RayTracer::Update(Scene& scene)
         pointLight.pos = glm::vec3(viewMatrix * glm::vec4(pointLight.pos, 1.f));
     }
 
-    // Transform directional lights to view space.
-    mDirectionalLights.resize(scene.mDirectionalLights.size());
-    for (std::size_t i = 0; i < scene.mDirectionalLights.size(); ++i)
+    // Transform spot lights to view space.
+    mSpotLights.resize(scene.mSpotLights.size());
+    for (std::size_t i = 0; i < scene.mSpotLights.size(); ++i)
     {
-        DirectionalLight& directionalLight = mDirectionalLights[i] = *scene.mDirectionalLights[i];
-        directionalLight.dir = glm::normalize(glm::vec3(viewMatrix * glm::vec4(directionalLight.dir, 0.f)));
+        SpotLight& spotLight = mSpotLights[i] = *scene.mSpotLights[i];
+        spotLight.pos = glm::vec3(viewMatrix * glm::vec4(spotLight.pos, 1.f));
+        spotLight.dir = glm::normalize(glm::vec3(viewMatrix * glm::vec4(spotLight.dir, 0.f)));
     }
 
     // Transform spheres to view space.
@@ -131,13 +132,13 @@ void RayTracer::Render(Scene& scene)
     // Update buffers.
     assert(mVertices.size() <= mMaxNumVertices);
     assert(mPointLights.size() <= mMaxNumPointLights);
-    assert(mDirectionalLights.size() <= mMaxNumDirectionalLights);
+    assert(mSpotLights.size() <= mMaxNumSpotLights);
     assert(mSpheres.size() <= mMaxNumSpheres);
     mShader->WriteStructuredBuffer<Vertex>(mVertices.data(), mVertices.size(), mVertexBuffer);
     mShader->WriteStructuredBuffer<PointLight>(mPointLights.data(), mPointLights.size(), mPointLightBuffer);
-    mShader->WriteStructuredBuffer<DirectionalLight>(mDirectionalLights.data(), mDirectionalLights.size(), mDirectionalLightBuffer);
+    mShader->WriteStructuredBuffer<SpotLight>(mSpotLights.data(), mSpotLights.size(), mSpotLightBuffer);
     mShader->WriteStructuredBuffer<Sphere>(mSpheres.data(), mSpheres.size(), mSphereBuffer);
-    mShader->WriteStructuredBuffer<MetaData>(&MetaData(mVertices.size(), mPointLights.size(), mDirectionalLights.size(), mSpheres.size(), mNumBounces, mEnergyCoefficient, mSSAA, mFOV), 1, mMetaBuffer);
+    mShader->WriteStructuredBuffer<MetaData>(&MetaData(mVertices.size(), mPointLights.size(), mSpotLights.size(), mSpheres.size(), mNumBounces, mEnergyCoefficient, mSSAA, mFOV), 1, mMetaBuffer);
 
     // Run compute shader.
     mShader->ExecuteCS(glm::vec3(mRenderer->mWidth / 32, mRenderer->mHeight / 32, 1));
@@ -161,11 +162,11 @@ void RayTracer::CreateTexture2DArray(std::vector<Texture*>& textures, ID3D11Shad
     mShader->CreateTexture2DArray(DXGI_FORMAT_B8G8R8A8_UNORM, 1024, 1024, 1, resources, texture2DArrayBuffer);
 }
 
-RayTracer::MetaData::MetaData(int numVertices, int numPointLights, int numDirectionalLights, int numSpheres, int numBounces, float energyCoefficient, int ssaa, float fov)
+RayTracer::MetaData::MetaData(int numVertices, int numPointLights, int numSpotLights, int numSpheres, int numBounces, float energyCoefficient, int ssaa, float fov)
 {
     this->numVertices = numVertices;
     this->numPointLights = numPointLights;
-    this->numDirectionalLights = numDirectionalLights;
+    this->numSpotLights = numSpotLights;
     this->numSpheres = numSpheres;
     this->numBounces = numBounces;
     this->energyCoefficient = energyCoefficient;

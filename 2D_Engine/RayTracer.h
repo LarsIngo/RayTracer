@@ -1,6 +1,6 @@
 #pragma once
 
-#include "DirectionalLight.h"
+#include "SpotLight.h"
 #include "Sphere.h"
 #include "PointLight.h"
 #include "Vertex.h"
@@ -44,8 +44,8 @@ class RayTracer
         // Max number of point lights.
         const int mMaxNumPointLights = 10;
 
-        // Max number of directional lights.
-        const int mMaxNumDirectionalLights = 10;
+        // Max number of spot lights.
+        const int mMaxNumSpotLights = 10;
 
         // Max number of spheres.
         const int mMaxNumSpheres = 15;
@@ -86,11 +86,11 @@ class RayTracer
         // Structured buffer contaning point light data.
         ID3D11ShaderResourceView* mPointLightBuffer;
 
-        // Vector of directional lights.
-        std::vector<DirectionalLight> mDirectionalLights;
+        // Vector of spot lights.
+        std::vector<SpotLight> mSpotLights;
 
-        // Structured buffer contaning directional light data.
-        ID3D11ShaderResourceView* mDirectionalLightBuffer;
+        // Structured buffer contaning spot light data.
+        ID3D11ShaderResourceView* mSpotLightBuffer;
 
         // Vector of spheres.
         std::vector<Sphere> mSpheres;
@@ -113,8 +113,8 @@ class RayTracer
             int numVertices;
             // Number of point lights.
             int numPointLights;
-            // Number of directinal lights.
-            int numDirectionalLights;
+            // Number of spot lights.
+            int numSpotLights;
             // Number of spheres.
             int numSpheres;
             // Number of bounces.
@@ -127,7 +127,7 @@ class RayTracer
             float fov;
 
             // Constructor.
-            MetaData(int numVertices, int numPointLights, int numDirectionalLights, int numSpheres, int numBounces, float energyCoefficient, int ssaa, float fov);
+            MetaData(int numVertices, int numPointLights, int numSpotLights, int numSpheres, int numBounces, float energyCoefficient, int ssaa, float fov);
         };
 
         struct ConstData {

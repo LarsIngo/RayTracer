@@ -48,17 +48,21 @@ struct PointLight
 // Point light buffer.
 StructuredBuffer<PointLight> g_PointLightBuffer : register(t1);
 
-// Directional light.
-struct DirectionalLight
+// Spot light.
+struct SpotLight
 {
-    // Direction.
-    float3 dir;
+    // Position.
+    float3 pos;
     // Color.
     float3 col;
+    // Direction.
+    float3 dir;
+    // Cone (degrees)
+    float cone;
     float2 pad;
 };
-// Directional light buffer.
-StructuredBuffer<DirectionalLight> g_DirectionalLightBuffer : register(t2);
+// Spot light buffer.
+StructuredBuffer<SpotLight> g_SpotLightBuffer : register(t2);
 
 // Sphere.
 struct Sphere
@@ -81,8 +85,8 @@ struct MetaData
     int numVertices;
     // Number of lights in point light buffer.
     int numPointLights;
-    // Number of lights in directional light buffer;
-    int numDirectionalLights;
+    // Number of lights in spot light buffer;
+    int numSpotLights;
     // Number of spheres in sphere buffer;
     int numSpheres;
     // Number of bounces.
@@ -258,6 +262,7 @@ HitData RayVsScene(float3 rayOrigin, float3 rayDirection)
         if (t > -0.001f && t < hitData.t) 
         {
             hitData.t = t;
+            hitData.sphere = false;
             hitData.vertexOffset = v;
         }
     }
@@ -286,7 +291,7 @@ float RayVsTriangle(float3 rayOrigin, float3 rayDirection, float3 v0, float3 v1,
     float3 s = rayOrigin - v0;
     float3 d = -rayDirection;
     float det = determinant(float3x3(d, e1, e2));
-    if (abs(det) > 0.001f)
+    if (det > 0.001f)
     {
         det = 1 / det;
         float u = det * determinant(float3x3(d, s, e2));
@@ -407,24 +412,43 @@ float3 CalculateColor(float3 rayDirection, float3 hitPoint, float3 normal, float
         }
     }
 
-    // Directional lights.
-    int numDirectionalLights = g_MetaBuffer[0].numDirectionalLights;
-    for (int i = 0; i < numDirectionalLights; ++i)
+    // Spot lights.
+    int numSpotLights = g_MetaBuffer[0].numSpotLights;
+    for (int i = 0; i < numSpotLights; ++i)
     {
-        // Directional light data.
-        DirectionalLight directionalLight = g_DirectionalLightBuffer[i];
-        float3 lightVec = -directionalLight.dir;
+        // Spot light data.
+        SpotLight spotLight = g_SpotLightBuffer[i];
+        float3 lightVec = spotLight.pos - hitPoint;
+        float distance = length(lightVec);
+        lightVec = normalize(lightVec);
 
-        // Calculate diffuse.
-        float diffuseFactor = max(dot(lightVec, normal), 0.f);
+        // Spot light fall off.
+        float angle = acos(clamp(dot(spotLight.dir, -lightVec), 0.f, 1.f));
+        float edge = radians(spotLight.cone);
+        float angleFactor = angle / edge;
+        float lightFactor = 1.f - angleFactor * angleFactor;
 
-        // Calculate specular.
-        float3 reflectVec = reflect(-lightVec, normal);
-        float3 specularVec = dot(-rayDirection, reflectVec);
-        float specular = pow(max(specularVec, 0.0f), 5.f) * 0.2f;
+        if (lightFactor > 0.f) 
+        {
+            // Shadow ray.
+            HitData hitData = RayVsScene(hitPoint + lightVec * 0.01f, lightVec);
 
-        // Combine color.
-        color += directionalLight.col * specular + diffuse * diffuseFactor;
+            if (hitData.t >= distance)
+            {
+                // Calculate diffuse.
+                const float intensity = 150.f;
+                float distanceFactor = intensity / ((distance + 1.f) * (distance + 1.f));
+                float diffuseFactor = max(dot(lightVec, normal), 0.f);
+
+                // Calculate specular.
+                float3 reflectVec = reflect(-lightVec, normal);
+                float3 specularVec = dot(-rayDirection, reflectVec);
+                float specular = pow(max(specularVec, 0.0f), 5.f) * 0.2f;
+
+                // Combine color.
+                color += lightFactor * distanceFactor * (spotLight.col * specular + diffuse * diffuseFactor);
+            }
+        }
     }
 
     return color;

@@ -6,7 +6,7 @@
 #include <crtdbg.h>
 #include <iostream>
 #include <glm/glm.hpp>
-#include "DirectionalLight.h"
+#include "SpotLight.h"
 #include "DxAssert.h"
 #include "Entity.h"
 #include "PointLight.h"
@@ -43,11 +43,11 @@ int main()
     {
         float space = 7.f;
 
-        PointLight* pointLight;
-        pointLight = scene.CreatePointLight();
-        pointLight->pos = glm::vec3(0.f, 0.f, -space / 2.f);
-        pointLight->col = glm::vec3(1.f, 1.f, 1.f);
-        pointLights.push_back(pointLight);
+        //PointLight* pointLight;
+        //pointLight = scene.CreatePointLight();
+        //pointLight->pos = glm::vec3(0.f, 0.f, -space / 2.f);
+        //pointLight->col = glm::vec3(1.f, 1.f, 1.f);
+        //pointLights.push_back(pointLight);
 
         //pointLight = scene.CreatePointLight();
         //pointLight->pos = glm::vec3(0.f, 0.f, space / 2.f);
@@ -95,12 +95,13 @@ int main()
         //pointLights.push_back(pointLight);
     }
 
-    // Directional lights.
+    // Spot lights.
     {
-        //DirectionalLight* directionalLight;
-        //directionalLight = scene.CreateDirectionalLight();
-        //directionalLight->dir = glm::normalize(glm::vec3(1.f, -2.f, 3.f));
-        //directionalLight->col = glm::vec3(1.f, 1.f, 1.f);
+        SpotLight* spotLight;
+        spotLight = scene.CreateSpotLight();
+        spotLight->pos = glm::vec3(0.f, 0.f, -4.5f);
+        spotLight->col = glm::vec3(1.f, 1.f, 1.f);
+        spotLight->dir = glm::vec3(0.f, 0.f, 1.f);
     }
 
     // Spheres.
@@ -111,27 +112,28 @@ int main()
         sphere->col = glm::vec3(0.f, 0.f, 1.f);
         sphere->radius = 1.f;
 
-        sphere = scene.CreateSphere();
-        sphere->pos = glm::vec3(5.f, 0.f, 0.f);
-        sphere->col = glm::vec3(0.f, 0.f, 1.f);
-        sphere->radius = 1.f;
+        //sphere = scene.CreateSphere();
+        //sphere->pos = glm::vec3(5.f, 0.f, 0.f);
+        //sphere->col = glm::vec3(0.f, 0.f, 1.f);
+        //sphere->radius = 1.f;
 
-        sphere = scene.CreateSphere();
-        sphere->pos = glm::vec3(-5.f, 0.f, -3.f);
-        sphere->col = glm::vec3(0.f, 0.f, 1.f);
-        sphere->radius = 1.f;
+        //sphere = scene.CreateSphere();
+        //sphere->pos = glm::vec3(-5.f, 0.f, -3.f);
+        //sphere->col = glm::vec3(0.f, 0.f, 1.f);
+        //sphere->radius = 1.f;
     }
 
     // Entities.
     //Entity* model0 = scene.CreateEntity();
-    //Entity* model1 = scene.CreateEntity();
     //model0->mPosition = glm::vec3(1.3f, -1.f, 0.f);
-    //model1->mPosition = glm::vec3(-1.3f, -1.f, 0.f);
     //model0->mModel.Load("assets/FBXModel.fbx");
-    //model1->mModel.Load("assets/OBJModel.obj");
     //model0->mDiffuseTextureID = scene.AddTexture(L"assets/DiffuseBrick.png");
-    //model1->mDiffuseTextureID = scene.AddTexture(L"assets/DiffuseBrick.png");
     //model0->mNormalTextureID = scene.AddTexture(L"assets/DefaultNormal.png");
+
+    //Entity* model1 = scene.CreateEntity();
+    //model1->mPosition = glm::vec3(-1.3f, -1.f, 0.f);
+    //model1->mModel.Load("assets/OBJModel.obj");
+    //model1->mDiffuseTextureID = scene.AddTexture(L"assets/DiffuseBrick.png");
     //model1->mNormalTextureID = scene.AddTexture(L"assets/NormalBrick.png");
 
     // Create application.
