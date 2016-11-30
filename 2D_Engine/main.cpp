@@ -112,15 +112,15 @@ int main()
         sphere->col = glm::vec3(0.f, 0.f, 1.f);
         sphere->radius = 1.f;
 
-        //sphere = scene.CreateSphere();
-        //sphere->pos = glm::vec3(5.f, 0.f, 0.f);
-        //sphere->col = glm::vec3(0.f, 0.f, 1.f);
-        //sphere->radius = 1.f;
+        sphere = scene.CreateSphere();
+        sphere->pos = glm::vec3(5.f, 0.f, 0.f);
+        sphere->col = glm::vec3(0.f, 0.f, 1.f);
+        sphere->radius = 1.f;
 
-        //sphere = scene.CreateSphere();
-        //sphere->pos = glm::vec3(-5.f, 0.f, -3.f);
-        //sphere->col = glm::vec3(0.f, 0.f, 1.f);
-        //sphere->radius = 1.f;
+        sphere = scene.CreateSphere();
+        sphere->pos = glm::vec3(-5.f, 0.f, -3.f);
+        sphere->col = glm::vec3(0.f, 0.f, 1.f);
+        sphere->radius = 1.f;
     }
 
     // Entities.
