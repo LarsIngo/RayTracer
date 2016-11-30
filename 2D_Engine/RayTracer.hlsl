@@ -142,10 +142,11 @@ Vertex Interpolate(float3 hitPoint, Vertex v0, Vertex v1, Vertex v2);
 
 // Calculate color for vertex.
 // hitPoint Point of intersection.
-// vertex Interpolated vertex.
-// entityID Index of which entity vertex corresponds.
+// normal Normal of intersection.
+// diffuse Diffuse of intersection.
+// inGlobalIllumination Global illumintion of intersection.
 // Return color.
-float3 CalculateColor(float3 rayDirecetion, float3 hitPoint, float3 position, float3 normal, float3 diffuse);
+float3 CalculateColor(float3 rayDirecetion, float3 hitPoint, float3 normal, float3 diffuse, float3 inGlobalIllumination);
 
 // Calculate normal for vertex with normal map.
 // normal Normal from interpolated vertex.
@@ -195,23 +196,19 @@ void CS_main(uint3 threadID : SV_DispatchThreadID)
                 float3 hitPoint = rayOrigin + rayDirection * hitData.t;
 
                 // Get point data.
-                float3 position;
                 float3 normal;
                 float3 diffuse;
 
                 if (hitData.sphere)
                 {   // Sphere.
                     Sphere sphere = g_SphereBuffer[hitData.sphereID];
-                    position = hitPoint;
                     normal = normalize(hitPoint - sphere.pos);
                     diffuse = sphere.col;
                 }
                 else
                 {   // Triangle.
-                    //int entityID = GetEntityID(hitData.vertexOffset);
                     // Interpolate vertex.
                     Vertex vertex = Interpolate(hitPoint, g_VertexBuffer[hitData.vertexOffset], g_VertexBuffer[hitData.vertexOffset + 1], g_VertexBuffer[hitData.vertexOffset + 2]);
-                    position = vertex.pos;
                     if (vertex.normTexID >= 0)
                         normal = CalculateNormal(vertex.norm, vertex.tang, g_TextureArray.SampleLevel(g_SampAni, float3(vertex.uv, vertex.normTexID), 0).xyz);
                     else
@@ -225,7 +222,7 @@ void CS_main(uint3 threadID : SV_DispatchThreadID)
 
                 // Get point color.
                 float energyFactor = pow(energyCoefficient, i + 1); // Energy loss for each bounce.
-                finalColor += CalculateColor(rayDirection, hitPoint, position, normal, diffuse) * energyFactor;
+                finalColor += CalculateColor(rayDirection, hitPoint, normal, diffuse, float3(0,0,0)) * energyFactor;
 
                 // Bounce ray.
                 rayDirection = reflect(rayDirection, normal);
@@ -366,7 +363,8 @@ Vertex Interpolate(float3 hitPoint, Vertex v0, Vertex v1, Vertex v2)
     float a2 = length(cross(f0, f1)) / a; // p2's triangle area / a.
 
     Vertex vertex;
-    vertex.pos = v0.pos * a0 + v1.pos * a1 + v2.pos * a2;
+    //vertex.pos = v0.pos * a0 + v1.pos * a1 + v2.pos * a2;
+    vertex.pos = hitPoint;
     vertex.norm = v0.norm * a0 + v1.norm * a1 + v2.norm * a2;
     vertex.tang = v0.tang * a0 + v1.tang * a1 + v2.tang * a2;
     vertex.uv = v0.uv * a0 + v1.uv * a1 + v2.uv * a2;
@@ -376,7 +374,7 @@ Vertex Interpolate(float3 hitPoint, Vertex v0, Vertex v1, Vertex v2)
     return vertex;
 }
 
-float3 CalculateColor(float3 rayDirection, float3 hitPoint, float3 position, float3 normal, float3 diffuse, float3 globalIllumination)
+float3 CalculateColor(float3 rayDirection, float3 hitPoint, float3 normal, float3 diffuse, float3 inGlobalIllumination)
 {
     float3 color = float3(0.f, 0.f, 0.f);
 
@@ -386,7 +384,7 @@ float3 CalculateColor(float3 rayDirection, float3 hitPoint, float3 position, flo
     {
         // Point light data.
         PointLight pointLight = g_PointLightBuffer[i];
-        float3 lightVec = pointLight.pos - position;
+        float3 lightVec = pointLight.pos - hitPoint;
         float distance = length(lightVec);
         lightVec = normalize(lightVec);
 
@@ -402,7 +400,7 @@ float3 CalculateColor(float3 rayDirection, float3 hitPoint, float3 position, flo
 
             // Calculate specular.
             float3 reflectVec = reflect(-lightVec, normal);
-            float3 specularVec = dot(-rayDirection, reflectVec); // TODO rayDirection or eyeDirection(-normalize(position))
+            float3 specularVec = dot(-rayDirection, reflectVec);
             float specular = pow(max(specularVec, 0.0f), 5.f) * 0.2f;
 
             // Combine color.
@@ -423,7 +421,7 @@ float3 CalculateColor(float3 rayDirection, float3 hitPoint, float3 position, flo
 
         // Calculate specular.
         float3 reflectVec = reflect(-lightVec, normal);
-        float3 specularVec = dot(-rayDirection, reflectVec); // TODO rayDirection or eyeDirection(-normalize(position))
+        float3 specularVec = dot(-rayDirection, reflectVec);
         float specular = pow(max(specularVec, 0.0f), 5.f) * 0.2f;
 
         // Combine color.
@@ -431,7 +429,7 @@ float3 CalculateColor(float3 rayDirection, float3 hitPoint, float3 position, flo
     }
 
     // Global illumiation.
-    color += float3(0.1f, 0.1f, 0.1f) * diffuse * dot(reflect(rayDirection, normal), normal);
+    color += inGlobalIllumination * diffuse * dot(reflect(rayDirection, normal), normal);
 
     return color;
 }
