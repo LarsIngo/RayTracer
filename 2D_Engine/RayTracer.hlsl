@@ -144,9 +144,8 @@ Vertex Interpolate(float3 hitPoint, Vertex v0, Vertex v1, Vertex v2);
 // hitPoint Point of intersection.
 // normal Normal of intersection.
 // diffuse Diffuse of intersection.
-// inGlobalIllumination Global illumintion of intersection.
 // Return color.
-float3 CalculateColor(float3 rayDirecetion, float3 hitPoint, float3 normal, float3 diffuse, float3 inGlobalIllumination);
+float3 CalculateColor(float3 rayDirecetion, float3 hitPoint, float3 normal, float3 diffuse);
 
 // Calculate normal for vertex with normal map.
 // normal Normal from interpolated vertex.
@@ -222,7 +221,7 @@ void CS_main(uint3 threadID : SV_DispatchThreadID)
 
                 // Get point color.
                 float energyFactor = pow(energyCoefficient, i + 1); // Energy loss for each bounce.
-                finalColor += CalculateColor(rayDirection, hitPoint, normal, diffuse, float3(0,0,0)) * energyFactor;
+                finalColor += CalculateColor(rayDirection, hitPoint, normal, diffuse) * energyFactor;
 
                 // Bounce ray.
                 rayDirection = reflect(rayDirection, normal);
@@ -374,7 +373,7 @@ Vertex Interpolate(float3 hitPoint, Vertex v0, Vertex v1, Vertex v2)
     return vertex;
 }
 
-float3 CalculateColor(float3 rayDirection, float3 hitPoint, float3 normal, float3 diffuse, float3 inGlobalIllumination)
+float3 CalculateColor(float3 rayDirection, float3 hitPoint, float3 normal, float3 diffuse)
 {
     float3 color = float3(0.f, 0.f, 0.f);
 
@@ -395,7 +394,7 @@ float3 CalculateColor(float3 rayDirection, float3 hitPoint, float3 normal, float
         {
             // Calculate diffuse.
             const float intensity = 15.f;
-            float distanceFactor = clamp(intensity / (distance * distance), 0.f, 1.f);
+            float distanceFactor = intensity / ((distance + 1.f) * (distance + 1.f));
             float diffuseFactor = max(dot(lightVec, normal), 0.f);
 
             // Calculate specular.
@@ -427,9 +426,6 @@ float3 CalculateColor(float3 rayDirection, float3 hitPoint, float3 normal, float
         // Combine color.
         color += directionalLight.col * specular + diffuse * diffuseFactor;
     }
-
-    // Global illumiation.
-    color += inGlobalIllumination * diffuse * dot(reflect(rayDirection, normal), normal);
 
     return color;
 }
