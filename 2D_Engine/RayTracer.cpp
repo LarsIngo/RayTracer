@@ -141,7 +141,7 @@ void RayTracer::Render(Scene& scene)
     mShader->WriteStructuredBuffer<MetaData>(&MetaData(mVertices.size(), mPointLights.size(), mSpotLights.size(), mSpheres.size(), mNumBounces, mEnergyCoefficient, mSSAA, mFOV), 1, mMetaBuffer);
 
     // Run compute shader.
-    mShader->ExecuteCS(glm::vec3(mRenderer->mWidth / 32, mRenderer->mHeight / 32, 1));
+    mShader->ExecuteCS(glm::vec3(mRenderer->mWidth / 16, mRenderer->mHeight / 16, 1));
 
     // Present to window.
     mRenderer->mSwapChain->Present(0,0);

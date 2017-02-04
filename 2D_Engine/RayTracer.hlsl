@@ -159,7 +159,7 @@ float3 CalculateColor(float3 rayDirecetion, float3 hitPoint, float3 normal, floa
 float3 CalculateNormal(float3 normal, float3 tangent, float3 normalMap);
 
 // One thread for each pixel in screen.
-[numthreads(32, 32, 1)]
+[numthreads(16, 16, 1)]
 void CS_main(uint3 threadID : SV_DispatchThreadID)
 {
     // Contants.
@@ -245,7 +245,7 @@ void CS_main(uint3 threadID : SV_DispatchThreadID)
     //finalColor = finalColor / (finalColor + float3(1.f, 1.f, 1.f));
 
     // Set pixel color.
-    g_Target[threadID.xy] = float4(finalColor, 1.f);
+    g_Target[threadID.xy] = float4(finalColor - float3(1,1,1) * 0.1f * (numBounces - 1.f), 1.f);
 }
 
 HitData RayVsScene(float3 rayOrigin, float3 rayDirection) 

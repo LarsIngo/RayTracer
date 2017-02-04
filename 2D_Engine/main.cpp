@@ -29,7 +29,11 @@ int main()
     // Create scene.
     Scene scene;
     Camera* cam = scene.GetCamera();
-    cam->mPosition.z = -5.f;
+    //cam->mPosition = glm::vec3(-8.5f, 17.f, -8.f);
+    cam->mPosition = glm::vec3(-25.f, 50.f, -15.f);
+    cam->Yaw(45.f);
+    cam->Pitch(45.f);
+    //cam->mPosition = glm::vec3(0.f, 0.f, -5.f);
 
     // Scene box.
     Entity* sceneBox = scene.CreateEntity();
@@ -43,65 +47,65 @@ int main()
     {
         float space = 7.f;
 
-        //PointLight* pointLight;
-        //pointLight = scene.CreatePointLight();
-        //pointLight->pos = glm::vec3(0.f, 0.f, -space / 2.f);
-        //pointLight->col = glm::vec3(1.f, 1.f, 1.f);
-        //pointLights.push_back(pointLight);
+        PointLight* pointLight;
+        pointLight = scene.CreatePointLight();
+        pointLight->pos = glm::vec3(0.f, 0.f, -space / 2.f);
+        pointLight->col = glm::vec3(1.f, 1.f, 1.f);
+        pointLights.push_back(pointLight);
 
-        //pointLight = scene.CreatePointLight();
-        //pointLight->pos = glm::vec3(0.f, 0.f, space / 2.f);
-        //pointLight->col = glm::vec3(1.f, 1.f, 1.f);
-        //pointLights.push_back(pointLight);
+        pointLight = scene.CreatePointLight();
+        pointLight->pos = glm::vec3(0.f, 0.f, space / 2.f);
+        pointLight->col = glm::vec3(1.f, 1.f, 1.f);
+        pointLights.push_back(pointLight);
 
-        //pointLight = scene.CreatePointLight();
-        //pointLight->pos = glm::vec3(-space, space, space);
-        //pointLight->col = glm::vec3(1.f, 1.f, 1.f);
-        //pointLights.push_back(pointLight);
+        pointLight = scene.CreatePointLight();
+        pointLight->pos = glm::vec3(-space, space, space);
+        pointLight->col = glm::vec3(1.f, 1.f, 1.f);
+        pointLights.push_back(pointLight);
 
-        //pointLight = scene.CreatePointLight();
-        //pointLight->pos = glm::vec3(space, space, space);
-        //pointLight->col = glm::vec3(1.f, 1.f, 1.f);
-        //pointLights.push_back(pointLight);
+        pointLight = scene.CreatePointLight();
+        pointLight->pos = glm::vec3(space, space, space);
+        pointLight->col = glm::vec3(1.f, 1.f, 1.f);
+        pointLights.push_back(pointLight);
 
-        //pointLight = scene.CreatePointLight();
-        //pointLight->pos = glm::vec3(-space, -space, space);
-        //pointLight->col = glm::vec3(1.f, 1.f, 1.f);
-        //pointLights.push_back(pointLight);
+        pointLight = scene.CreatePointLight();
+        pointLight->pos = glm::vec3(-space, -space, space);
+        pointLight->col = glm::vec3(1.f, 1.f, 1.f);
+        pointLights.push_back(pointLight);
 
-        //pointLight = scene.CreatePointLight();
-        //pointLight->pos = glm::vec3(space, -space, space);
-        //pointLight->col = glm::vec3(1.f, 1.f, 1.f);
-        //pointLights.push_back(pointLight);
+        pointLight = scene.CreatePointLight();
+        pointLight->pos = glm::vec3(space, -space, space);
+        pointLight->col = glm::vec3(1.f, 1.f, 1.f);
+        pointLights.push_back(pointLight);
 
-        //pointLight = scene.CreatePointLight();
-        //pointLight->pos = glm::vec3(-space, space, -space);
-        //pointLight->col = glm::vec3(1.f, 1.f, 1.f);
-        //pointLights.push_back(pointLight);
+        pointLight = scene.CreatePointLight();
+        pointLight->pos = glm::vec3(-space, space, -space);
+        pointLight->col = glm::vec3(1.f, 1.f, 1.f);
+        pointLights.push_back(pointLight);
 
-        //pointLight = scene.CreatePointLight();
-        //pointLight->pos = glm::vec3(space, space, -space);
-        //pointLight->col = glm::vec3(1.f, 1.f, 1.f);
-        //pointLights.push_back(pointLight);
+        pointLight = scene.CreatePointLight();
+        pointLight->pos = glm::vec3(space, space, -space);
+        pointLight->col = glm::vec3(1.f, 1.f, 1.f);
+        pointLights.push_back(pointLight);
 
-        //pointLight = scene.CreatePointLight();
-        //pointLight->pos = glm::vec3(-space, -space, -space);
-        //pointLight->col = glm::vec3(1.f, 1.f, 1.f);
-        //pointLights.push_back(pointLight);
+        pointLight = scene.CreatePointLight();
+        pointLight->pos = glm::vec3(-space, -space, -space);
+        pointLight->col = glm::vec3(1.f, 1.f, 1.f);
+        pointLights.push_back(pointLight);
 
-        //pointLight = scene.CreatePointLight();
-        //pointLight->pos = glm::vec3(space, -space, -space);
-        //pointLight->col = glm::vec3(1.f, 1.f, 1.f);
-        //pointLights.push_back(pointLight);
+        pointLight = scene.CreatePointLight();
+        pointLight->pos = glm::vec3(space, -space, -space);
+        pointLight->col = glm::vec3(1.f, 1.f, 1.f);
+        pointLights.push_back(pointLight);
     }
 
     // Spot lights.
     {
         SpotLight* spotLight;
         spotLight = scene.CreateSpotLight();
-        spotLight->pos = glm::vec3(0.f, 0.f, -4.5f);
+        spotLight->pos = glm::vec3(0.f, 8.f, 0.0f);
         spotLight->col = glm::vec3(1.f, 1.f, 1.f);
-        spotLight->dir = glm::vec3(0.f, 0.f, 1.f);
+        spotLight->dir = glm::vec3(0.f, -1.f, 0.f);
     }
 
     // Spheres.
@@ -114,30 +118,36 @@ int main()
 
         sphere = scene.CreateSphere();
         sphere->pos = glm::vec3(5.f, 0.f, 0.f);
-        sphere->col = glm::vec3(0.f, 0.f, 1.f);
-        sphere->radius = 1.f;
+        sphere->col = glm::vec3(0.f, 1.f, 0.f);
+        sphere->radius = 1.5f;
 
         sphere = scene.CreateSphere();
         sphere->pos = glm::vec3(-5.f, 0.f, -3.f);
-        sphere->col = glm::vec3(0.f, 0.f, 1.f);
-        sphere->radius = 1.f;
+        sphere->col = glm::vec3(1.f, 0.f, 0.f);
+        sphere->radius = 2.5f;
     }
 
     // Entities.
-    //Entity* model0 = scene.CreateEntity();
-    //model0->mPosition = glm::vec3(1.3f, -1.f, 0.f);
-    //model0->mModel.Load("assets/FBXModel.fbx");
-    //model0->mDiffuseTextureID = scene.AddTexture(L"assets/DiffuseBrick.png");
-    //model0->mNormalTextureID = scene.AddTexture(L"assets/DefaultNormal.png");
+    Entity* model0 = scene.CreateEntity();
+    model0->mPosition = glm::vec3(0.f, 0.f, 0.f);
+    model0->mModel.Load("assets/FBXAnimation.fbx");
+    model0->mDiffuseTextureID = scene.AddTexture(L"assets/DiffuseBrick.png");
+    model0->mNormalTextureID = scene.AddTexture(L"assets/NormalBrick.png");
 
-    //Entity* model1 = scene.CreateEntity();
-    //model1->mPosition = glm::vec3(-1.3f, -1.f, 0.f);
-    //model1->mModel.Load("assets/OBJModel.obj");
-    //model1->mDiffuseTextureID = scene.AddTexture(L"assets/DiffuseBrick.png");
-    //model1->mNormalTextureID = scene.AddTexture(L"assets/NormalBrick.png");
+    {
+        for (int i = 0; i < 1; ++i) 
+        {   // Loop to add more triangles.
+            Entity* model = scene.CreateEntity();
+            model->mPosition = glm::vec3(0.f, 0.f, -7.5f);
+            model->mScale *= 2.f;
+            model->mModel.Load("assets/FBXAnimation.fbx");
+            model->mDiffuseTextureID = scene.AddTexture(L"assets/DiffuseBrick.png");
+            model->mNormalTextureID = scene.AddTexture(L"assets/NormalBrick.png");
+        }
+    }
 
     // Create application.
-    RayTracer rayTracer(1024, 1024, &scene);
+    RayTracer rayTracer(640, 640, &scene);
     Renderer* renderer = rayTracer.mRenderer;
 
     // Set Frame Latency.
@@ -153,6 +163,8 @@ int main()
         long long newTime = duration_cast<milliseconds>(system_clock::now().time_since_epoch()).count();
         duration += dt = static_cast<float>(newTime - lastTime)/1000.f;
         lastTime = newTime;
+
+        //std::cout << cam->mPosition.x << ":" << cam->mPosition.y << ":" << cam->mPosition.z << std::endl;
 
         // Input.
         float speed = 0.1f;
@@ -213,8 +225,8 @@ int main()
             pointLight->pos += glm::vec3(arrowinput.x, 0.f, arrowinput.y) * dt * 20.f;
 
         // Models.
-        //model0->mModel.skeleton.Animate(&model0->mModel.animations[0], duration);
-        //model0->mModel.TransformMeshCPU();
+        model0->mModel.skeleton.Animate(&model0->mModel.animations[0], duration);
+        model0->mModel.TransformMeshCPU();
         
 
 

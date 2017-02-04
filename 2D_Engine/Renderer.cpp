@@ -137,7 +137,7 @@ void Renderer::Initialise()
         nullptr,					// Use the default adapter.
         D3D_DRIVER_TYPE_HARDWARE,	// Use the graphics card for rendering. Other options include software emulation.
         NULL,						// NULL since we don't use software emulation.
-        D3D11_CREATE_DEVICE_DEBUG | D3D11_CREATE_DEVICE_SINGLETHREADED,	// Dbg creation flags.
+        D3D11_CREATE_DEVICE_DEBUG | D3D11_CREATE_DEVICE_SINGLETHREADED | D3D11_CREATE_DEVICE_DISABLE_GPU_TIMEOUT,	// Dbg creation flags.
         nullptr,					// Array of feature levels to try using. With null the following are used 11.0, 10.1, 10.0, 9.3, 9.2, 9.1.
         0,							// The array above has 0 elements.
         D3D11_SDK_VERSION,			// Always use this.
